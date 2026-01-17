@@ -1,7 +1,9 @@
 package chess;
 
+import chess.MoveCalculator.*;
+
 import java.util.Collection;
-import java.util.List;
+import java.util.Objects;
 
 /**
  * Represents a single chess piece
@@ -13,10 +15,13 @@ public class ChessPiece {
 
     private final ChessGame.TeamColor pieceColor;
     private final PieceType type;
+    private final PieceMovesCalculator calculator;
+
 
     public ChessPiece(ChessGame.TeamColor pieceColor, ChessPiece.PieceType type) {
         this.pieceColor = pieceColor;
         this.type = type;
+        this.calculator = createCalculator(type);
     }
 
     /**
@@ -55,11 +60,38 @@ public class ChessPiece {
      * @return Collection of valid moves
      */
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
-        ChessPiece piece = board.getPiece(myPosition);
-        if(piece.getPieceType() == PieceType.BISHOP){
-            //hardcoded
-            return List.of(new ChessMove(new ChessPosition(5,4), new ChessPosition(1,8),null));
+        return calculator.pieceMoves(board, myPosition);
+
+    }
+
+    private static PieceMovesCalculator createCalculator(PieceType type) {
+        return switch (type) {
+            case KING -> new KingMovesCaculator();
+            case QUEEN -> new QueenMovesCalculator();
+            case ROOK -> new RookMovesCalculator();
+            case BISHOP -> new BishopMovesCalculator();
+            case KNIGHT -> new KnightMovesCalculator();
+            case PAWN -> new PawnMovesCalculator();
+        };
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) {
+            return false;
         }
-        return List.of();
+        ChessPiece piece = (ChessPiece) o;
+        return pieceColor == piece.pieceColor && type == piece.type;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(pieceColor, type);
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s %s", pieceColor, type);
     }
 }
