@@ -94,11 +94,13 @@ public class ChessBoard {
 
     @Override
     public int hashCode() {
+
         return Arrays.deepHashCode(squares);
     }
 
     @Override
     public String toString() {
+
         return String.format("ChessBoard%s", Arrays.deepToString(squares));
     }
 }

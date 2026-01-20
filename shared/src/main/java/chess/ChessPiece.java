@@ -66,7 +66,7 @@ public class ChessPiece {
 
     private static PieceMovesCalculator createCalculator(PieceType type) {
         return switch (type) {
-            case KING -> new KingMovesCaculator();
+            case KING -> new KingMovesCalculator();
             case QUEEN -> new QueenMovesCalculator();
             case ROOK -> new RookMovesCalculator();
             case BISHOP -> new BishopMovesCalculator();
@@ -87,11 +87,13 @@ public class ChessPiece {
 
     @Override
     public int hashCode() {
+
         return Objects.hash(pieceColor, type);
     }
 
     @Override
     public String toString() {
+
         return String.format("%s %s", pieceColor, type);
     }
 }
