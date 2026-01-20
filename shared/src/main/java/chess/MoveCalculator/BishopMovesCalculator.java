@@ -35,7 +35,9 @@ public class BishopMovesCalculator implements PieceMovesCalculator{
                 if (targetPiece == null) {
                     // move to empty square
                     moves.add(new ChessMove(position, target, null));
-                } else {
+                }
+
+                else {
                     // square have another piece
                     if (targetPiece.getTeamColor() != color) {
                         // enemy piece
