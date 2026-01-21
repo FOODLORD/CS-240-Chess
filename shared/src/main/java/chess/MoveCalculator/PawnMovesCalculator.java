@@ -24,7 +24,9 @@ public class PawnMovesCalculator implements PieceMovesCalculator{
             move_forward = 1;
             start_row = 2;
             promotion_row = 8;
-        } else { //black
+        }
+
+        else { //black
             move_forward = -1;
             start_row = 7;
             promotion_row = 1;
@@ -42,7 +44,9 @@ public class PawnMovesCalculator implements PieceMovesCalculator{
                 //promotion
                 if (next_row == promotion_row) {
                     PromotionMoves(moves, position, forward_position);
-                } else {
+                }
+
+                else {
                     moves.add(new ChessMove(position, forward_position, null));
                 }
 
