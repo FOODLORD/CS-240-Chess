@@ -83,6 +83,14 @@ public class ChessBoard {
 
     }
 
+    public ChessBoard(ChessBoard board) {
+        this.squares = new ChessPiece[8][8];
+
+        for (int row = 0; row < 8; row++) {
+            this.squares[row] = Arrays.copyOf(board.squares[row], 8);
+        }
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) {
