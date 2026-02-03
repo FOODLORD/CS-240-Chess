@@ -1,4 +1,4 @@
-package chess.MoveCalculator;
+package chess.movescalculator;
 
 import chess.*;
 
@@ -6,34 +6,30 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class QueenMovesCalculator implements PieceMovesCalculator{
+public class BishopMovesCalculator implements PieceMovesCalculator{
     @Override
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition position) {
         List<ChessMove> moves = new ArrayList<>();
+        //Bishop moves
 
         ChessPiece piece = board.getPiece(position);
         ChessGame.TeamColor color = piece.getTeamColor();
 
-        //Queen moves
-
-        int[][] move_direction = {
-                { 1,  0},   // move up
-                {-1,  0},   // move down
-                { 0,  1},   // move right
-                { 0, -1},   // move left
-                { 1,  1},   // move diaonally right
-                { 1, -1},   // move diagonally left
-                {-1,  1},   // move diagonally right downwards
-                {-1, -1}    // move diagonally left downwards
+        int[][] moveDirection = {
+                {1, 1}, // top right
+                {1, -1}, // top left
+                {-1, 1}, // bottom right
+                {-1, -1}, // bottom left
         };
 
-        for (int[] dir : move_direction) {
-            int next_row = position.getRow() + dir[0];
-            int next_col = position.getColumn() + dir[1];
 
-            while (next_row >= 1 && next_row <= 8 && next_col >= 1 && next_col <= 8) {
+        for (int[] dir : moveDirection) {
+            int nextRow = position.getRow() + dir[0];
+            int nextCol = position.getColumn() + dir[1];
 
-                ChessPosition target = new ChessPosition(next_row, next_col);
+            while (nextRow >= 1 && nextRow <= 8 && nextCol >= 1 && nextCol <= 8) {
+
+                ChessPosition target = new ChessPosition(nextRow, nextCol);
                 ChessPiece targetPiece = board.getPiece(target);
 
                 if (targetPiece == null) {
@@ -50,8 +46,8 @@ public class QueenMovesCalculator implements PieceMovesCalculator{
                     break;
                 }
 
-                next_row += dir[0];
-                next_col += dir[1];
+                nextRow += dir[0];
+                nextCol += dir[1];
             }
         }
 

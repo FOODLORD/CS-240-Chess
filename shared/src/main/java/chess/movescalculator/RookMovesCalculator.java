@@ -1,4 +1,4 @@
-package chess.MoveCalculator;
+package chess.movescalculator;
 
 import chess.*;
 
@@ -6,37 +6,36 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class BishopMovesCalculator implements PieceMovesCalculator{
+public class RookMovesCalculator implements PieceMovesCalculator{
     @Override
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition position) {
         List<ChessMove> moves = new ArrayList<>();
-        //Bishop moves
 
         ChessPiece piece = board.getPiece(position);
         ChessGame.TeamColor color = piece.getTeamColor();
 
-        int[][] move_direction = {
-                {1, 1}, // top right
-                {1, -1}, // top left
-                {-1, 1}, // bottom right
-                {-1, -1}, // bottom left
+        //Rook moves
+
+        int[][] moveDirection = {
+                { 1,  0},   // move up
+                {-1,  0},   // move down
+                { 0,  1},   // move right
+                { 0, -1}    // move left
         };
 
+        for (int[] dir : moveDirection) {
+            int nextRow = position.getRow() + dir[0];
+            int nextCol = position.getColumn() + dir[1];
 
-        for (int[] dir : move_direction) {
-            int next_row = position.getRow() + dir[0];
-            int next_col = position.getColumn() + dir[1];
+            while (nextRow >= 1 && nextRow <= 8 && nextCol >= 1 && nextCol <= 8) {
 
-            while (next_row >= 1 && next_row <= 8 && next_col >= 1 && next_col <= 8) {
-
-                ChessPosition target = new ChessPosition(next_row, next_col);
+                ChessPosition target = new ChessPosition(nextRow, nextCol);
                 ChessPiece targetPiece = board.getPiece(target);
 
                 if (targetPiece == null) {
                     // move to empty square
                     moves.add(new ChessMove(position, target, null));
                 }
-
                 else {
                     // square have another piece
                     if (targetPiece.getTeamColor() != color) {
@@ -46,10 +45,12 @@ public class BishopMovesCalculator implements PieceMovesCalculator{
                     break;
                 }
 
-                next_row += dir[0];
-                next_col += dir[1];
+                nextRow += dir[0];
+                nextCol += dir[1];
             }
         }
+
+
 
         return moves;
     }

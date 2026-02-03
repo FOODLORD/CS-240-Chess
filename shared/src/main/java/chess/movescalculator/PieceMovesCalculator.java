@@ -1,4 +1,4 @@
-package chess.MoveCalculator;
+package chess.movescalculator; //PieceMovesCalculator.java
 
 import chess.ChessBoard;
 import chess.ChessMove;
