@@ -98,6 +98,7 @@ public class ChessGame {
      */
     public void makeMove(ChessMove move) throws InvalidMoveException {
 
+
         ChessPiece piece = board.getPiece(move.getStartPosition());
 
         if (piece == null) {
@@ -121,7 +122,10 @@ public class ChessGame {
             placePiece = new ChessPiece(piece.getTeamColor(), move.getPromotionPiece());
         }
 
+        placePiece.setHasMoved(true);
         board.addPiece(move.getEndPosition(), placePiece);
+
+        castling(piece, move);
 
         teamTurn = (teamTurn == TeamColor.WHITE) ? TeamColor.BLACK : TeamColor.WHITE;
     }
@@ -247,6 +251,43 @@ public class ChessGame {
     public ChessBoard getBoard() {
 
         return board;
+    }
+
+    private void castling(ChessPiece piece, ChessMove move) {
+
+        if (piece.getPieceType() != ChessPiece.PieceType.KING) {
+            return;
+        }
+
+        int startCol = move.getStartPosition().getColumn();
+        int endCol = move.getEndPosition().getColumn();
+        int row = move.getStartPosition().getRow();
+
+        if (Math.abs(startCol - endCol) != 2) {
+            return;
+        }
+
+        // right rook move
+        if (endCol == 7) {
+            ChessPosition rookStart = new ChessPosition(row, 8);
+            ChessPosition rookEnd = new ChessPosition(row, 6);
+
+            ChessPiece rook = board.getPiece(rookStart);
+            board.addPiece(rookStart, null);
+            rook.setHasMoved(true);
+            board.addPiece(rookEnd, rook);
+        }
+
+        // left rook move
+        if (endCol == 3) {
+            ChessPosition rookStart = new ChessPosition(row, 1);
+            ChessPosition rookEnd = new ChessPosition(row, 4);
+
+            ChessPiece rook = board.getPiece(rookStart);
+            board.addPiece(rookStart, null);
+            rook.setHasMoved(true);
+            board.addPiece(rookEnd, rook);
+        }
     }
 
     @Override

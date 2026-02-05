@@ -16,12 +16,17 @@ public class ChessPiece {
     private final ChessGame.TeamColor pieceColor;
     private final PieceType type;
     private final PieceMovesCalculator calculator;
+    private boolean hasMoved = false;
 
 
     public ChessPiece(ChessGame.TeamColor pieceColor, ChessPiece.PieceType type) {
         this.pieceColor = pieceColor;
         this.type = type;
         this.calculator = createCalculator(type);
+    }
+
+    public void setHasMoved(boolean hasMoved) {
+        this.hasMoved = hasMoved;
     }
 
     /**
@@ -74,6 +79,12 @@ public class ChessPiece {
             case PAWN -> new PawnMovesCalculator();
         };
     }
+
+    public boolean hasMoved() {
+        return hasMoved;
+    }
+
+
 
     @Override
     public boolean equals(Object o) {

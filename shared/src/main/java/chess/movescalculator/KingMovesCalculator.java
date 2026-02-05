@@ -37,17 +37,80 @@ public class KingMovesCalculator implements PieceMovesCalculator{
             ChessPosition target = new ChessPosition(nextRow, nextCol);
             ChessPiece targetPiece = board.getPiece(target);
 
-            if (targetPiece == null) {
+            if (targetPiece == null || targetPiece.getTeamColor() != color) {
                 // move to empty square
-                moves.add(new ChessMove(position, target, null));
-            }
-
-            else if (targetPiece.getTeamColor() != color) {
-                // enemy piece
                 moves.add(new ChessMove(position, target, null));
             }
         }
 
+        //start castling
+
+        if (!piece.hasMoved()) {
+            int rowStart = (color == ChessGame.TeamColor.WHITE) ? 1 : 8;
+
+            if (position.getRow() == rowStart && position.getColumn() == 5) {
+
+                //king move right
+                ChessPosition rookPos = new ChessPosition(rowStart, 8);
+                ChessPiece rook = board.getPiece(rookPos);
+
+                if (rook != null && rook.getPieceType() == ChessPiece.PieceType.ROOK && !rook.hasMoved()) {
+                    ChessPosition fPos = new ChessPosition(rowStart, 6);
+                    ChessPosition gPos = new ChessPosition(rowStart, 7);
+
+                    if (board.getPiece(fPos) == null
+                            && board.getPiece(gPos) == null
+                            && !castlingSquareChecked(board, position, color)
+                            && !castlingSquareChecked(board, fPos, color)
+                            && !castlingSquareChecked(board, gPos, color)) {
+
+                        moves.add(new ChessMove(position, gPos, null));
+                    }
+                }
+
+                //king move left
+
+                rookPos = new ChessPosition(rowStart, 1);
+                rook = board.getPiece(rookPos);
+
+                if (rook != null && rook.getPieceType() == ChessPiece.PieceType.ROOK && !rook.hasMoved()) {
+                    ChessPosition dPos = new ChessPosition(rowStart, 4);
+                    ChessPosition cPos = new ChessPosition(rowStart, 3);
+
+                    if (board.getPiece(new ChessPosition(rowStart, 2)) == null
+                            && board.getPiece(dPos) == null
+                            && board.getPiece(cPos) == null
+                            && !castlingSquareChecked(board, position, color)
+                            && !castlingSquareChecked(board, dPos, color)
+                            && !castlingSquareChecked(board, cPos, color)) {
+
+                        moves.add(new ChessMove(position, cPos, null));
+                    }
+                }
+            }
+        }
+
+
         return moves;
+    }
+
+    private boolean castlingSquareChecked(ChessBoard board, ChessPosition square, ChessGame.TeamColor kingColor) {
+        for (int row = 1; row <= 8; row++) {
+            for (int col = 1; col <= 8; col++) {
+
+                ChessPosition pos = new ChessPosition(row, col);
+                ChessPiece enemy = board.getPiece(pos);
+
+                if (enemy != null && enemy.getTeamColor() != kingColor) {
+                    Collection<ChessMove> moves = enemy.pieceMoves(board, pos);
+                    for (ChessMove move : moves) {
+                        if (move.getEndPosition().equals(square)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
     }
 }
