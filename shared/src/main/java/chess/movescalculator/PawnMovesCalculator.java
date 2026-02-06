@@ -9,6 +9,7 @@ import java.util.List;
 public class PawnMovesCalculator implements PieceMovesCalculator{
     @Override
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition position) {
+
         List<ChessMove> moves = new ArrayList<>();
 
         ChessPiece piece = board.getPiece(position);
@@ -86,6 +87,7 @@ public class PawnMovesCalculator implements PieceMovesCalculator{
                     moves.add(new ChessMove(position, target, null));
                 }
             }
+
         }
 
 

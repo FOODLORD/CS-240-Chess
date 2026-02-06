@@ -14,6 +14,7 @@ public class ChessGame {
 
     private ChessBoard board;
     private TeamColor teamTurn;
+    private ChessPosition enPassantCheck;
 
     public ChessGame() {
 
@@ -65,6 +66,39 @@ public class ChessGame {
         //calculate all the moves
         Collection<ChessMove> possibleMoves = piece.pieceMoves(board, startPosition);
 
+        //en passant moves
+        if (piece.getPieceType() == ChessPiece.PieceType.PAWN && enPassantCheck != null) {
+
+            int row = startPosition.getRow();
+            int col = startPosition.getColumn();
+            int dir = (piece.getTeamColor() == TeamColor.WHITE) ? 1 : -1;
+
+            // en passant row
+            if ((piece.getTeamColor() == TeamColor.WHITE && row == 5)
+                    || (piece.getTeamColor() == TeamColor.BLACK && row == 4)) {
+
+                // left
+                if (enPassantCheck.getRow() == row && enPassantCheck.getColumn() == col - 1) {
+
+                    ChessPosition end = new ChessPosition(row + dir, col - 1);
+
+                    if (board.getPiece(end) == null) {
+                        possibleMoves.add(new ChessMove(startPosition, end, null));
+                    }
+                }
+
+                // right
+                if (enPassantCheck.getRow() == row && enPassantCheck.getColumn() == col + 1) {
+
+                    ChessPosition end = new ChessPosition(row + dir, col + 1);
+
+                    if (board.getPiece(end) == null) {
+                        possibleMoves.add(new ChessMove(startPosition, end, null));
+                    }
+                }
+            }
+        }
+
         Collection<ChessMove> validMoves = new ArrayList<>();
 
         for (ChessMove move : possibleMoves){
@@ -98,7 +132,6 @@ public class ChessGame {
      */
     public void makeMove(ChessMove move) throws InvalidMoveException {
 
-
         ChessPiece piece = board.getPiece(move.getStartPosition());
 
         if (piece == null) {
@@ -116,17 +149,35 @@ public class ChessGame {
 
         board.addPiece(move.getStartPosition(), null);
 
-        ChessPiece placePiece = piece;
 
         if (move.getPromotionPiece() != null){
-            placePiece = new ChessPiece(piece.getTeamColor(), move.getPromotionPiece());
+            piece = new ChessPiece(piece.getTeamColor(), move.getPromotionPiece());
         }
 
-        placePiece.setHasMoved(true);
-        board.addPiece(move.getEndPosition(), placePiece);
+        piece.setHasMoved(true);
+        board.addPiece(move.getEndPosition(), piece);
+
+        enPassant(piece, move.getStartPosition(), move.getEndPosition());
+
+        //check if pawn move double
+        if (piece.getPieceType() == ChessPiece.PieceType.PAWN) {
+            int startRow = move.getStartPosition().getRow();
+            int endRow = move.getEndPosition().getRow();
+
+            if (Math.abs(startRow - endRow) == 2) {
+                enPassantCheck = move.getEndPosition();
+            }
+            else {
+                enPassantCheck = null;
+            }
+        }
+        else {
+            enPassantCheck = null;
+        }
+
+
 
         castling(piece, move);
-
         teamTurn = (teamTurn == TeamColor.WHITE) ? TeamColor.BLACK : TeamColor.WHITE;
     }
 
@@ -289,6 +340,40 @@ public class ChessGame {
             board.addPiece(rookEnd, rook);
         }
     }
+
+    private void enPassant(ChessPiece piece, ChessPosition start, ChessPosition end) {
+
+        //check if pawn
+        if (piece.getPieceType() != ChessPiece.PieceType.PAWN) {
+            return;
+        }
+
+        //cannot move straight
+        if (start.getColumn() == end.getColumn()) {
+            return;
+        }
+
+        int capturedRow;
+
+        if (piece.getTeamColor() == ChessGame.TeamColor.WHITE) {
+            capturedRow = end.getRow() - 1;
+        } else {
+            capturedRow = end.getRow() + 1;
+        }
+
+
+        ChessPosition capturedPos = new ChessPosition(capturedRow, end.getColumn());
+
+        ChessPiece capturedPawn = board.getPiece(capturedPos);
+
+        if (capturedPawn != null
+                && capturedPawn.getPieceType() == ChessPiece.PieceType.PAWN
+                && capturedPawn.getTeamColor() != piece.getTeamColor()) {
+
+            board.addPiece(capturedPos, null);
+        }
+    }
+
 
     @Override
     public boolean equals(Object o) {
