@@ -116,6 +116,26 @@ public class ChessGame {
             //swap back board
             board = originalBoard;
 
+            // check castling rules
+            if (piece.getPieceType() == ChessPiece.PieceType.KING
+                    && Math.abs(move.getStartPosition().getColumn() - move.getEndPosition().getColumn()) == 2) {
+
+                //if currently in check
+                if (isInCheck(piece.getTeamColor())) {
+                    continue;
+                }
+
+                int row = move.getStartPosition().getRow();
+                int startCol = move.getStartPosition().getColumn();
+                int endCol = move.getEndPosition().getColumn();
+
+                int midCol = (startCol + endCol) / 2;
+                ChessPosition midSquare = new ChessPosition(row, midCol);
+
+                if (canEnemyAttack(midSquare, piece.getTeamColor())) {
+                    continue;
+                }
+            }
             //check if the move will check the king
             if (!kingCheck){
                 validMoves.add(move);
@@ -189,40 +209,13 @@ public class ChessGame {
      */
     public boolean isInCheck(TeamColor teamColor) {
 
-        ChessPosition kingPosition = null;
-        //find king
-        for (int row = 1; row <= 8; row++) {
-            for (int col = 1; col <= 8; col++) {
-                ChessPosition kingPos = new ChessPosition(row, col);
-                ChessPiece kingPiece = board.getPiece(kingPos);
+        ChessPosition kingPosition = getKingPos(teamColor);
 
-                if (kingPiece != null && kingPiece.getTeamColor() == teamColor
-                        && kingPiece.getPieceType() == ChessPiece.PieceType.KING) {
-                    kingPosition = kingPos;
-                }
-            }
+        if (kingPosition == null) {
+            return false;
         }
 
-        //check enemy moves
-        for (int row = 1; row <= 8; row++) {
-            for (int col = 1; col <= 8; col++) {
-                ChessPosition enemyPos = new ChessPosition(row, col);
-                ChessPiece enemyPiece = board.getPiece(enemyPos);
-
-                if (enemyPiece != null && enemyPiece.getTeamColor() != teamColor) {
-                    Collection<ChessMove> moves =
-                            enemyPiece.pieceMoves(board, enemyPos);
-
-                    for (ChessMove move : moves) {
-                        if (move.getEndPosition().equals(kingPosition)) {
-                            return true;
-                        }
-                    }
-                }
-            }
-        }
-
-        return false;
+        return canEnemyAttack(kingPosition, teamColor);
     }
 
     /**
@@ -237,21 +230,8 @@ public class ChessGame {
             return false;
         }
         //check if any piece can still move
-        for (int row = 1; row <= 8; row++) {
-            for (int col = 1; col <= 8; col++) {
-                ChessPosition pos = new ChessPosition(row, col);
-                ChessPiece piece = board.getPiece(pos);
 
-                if (piece != null && piece.getTeamColor() == teamColor) {
-                    Collection<ChessMove> moves = validMoves(pos);
-                    //if one can move
-                    if (!moves.isEmpty()) {
-                        return false;
-                    }
-                }
-            }
-        }
-        return true;
+        return !hasValidMoves(teamColor);
     }
 
     /**
@@ -267,21 +247,7 @@ public class ChessGame {
             return false;
         }
 
-        for (int row = 1; row <= 8; row++) {
-            for (int col = 1; col <= 8; col++) {
-                ChessPosition pos = new ChessPosition(row,col);
-                ChessPiece piece = board.getPiece(pos);
-
-                if (piece != null && piece.getTeamColor() == teamColor) {
-                    Collection<ChessMove> moves = validMoves(pos);
-                    //if one can move
-                    if (!moves.isEmpty()) {
-                        return false;
-                    }
-                }
-            }
-        }
-        return true;
+        return !hasValidMoves(teamColor);
     }
 
     /**
@@ -373,6 +339,70 @@ public class ChessGame {
             board.addPiece(capturedPos, null);
         }
     }
+
+    private boolean hasValidMoves(TeamColor teamColor){
+        //check if any piece have moves left
+        for (int row = 1; row <= 8; row++) {
+            for (int col = 1; col <= 8; col++) {
+                ChessPosition pos = new ChessPosition(row, col);
+                ChessPiece piece = board.getPiece(pos);
+
+                if (piece != null && piece.getTeamColor() == teamColor) {
+                    Collection<ChessMove> moves = validMoves(pos);
+                    //if one can move
+                    if (!moves.isEmpty()) {
+                        return true;  // Found at least one legal move
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private ChessPosition getKingPos(TeamColor teamColor){
+        for (int row = 1; row <= 8; row++) {
+            for (int col = 1; col <= 8; col++) {
+                ChessPosition kingPos = new ChessPosition(row, col);
+                ChessPiece kingPiece = board.getPiece(kingPos);
+
+                if (kingPiece != null
+                        &&kingPiece.getTeamColor() == teamColor
+                        && kingPiece.getPieceType() == ChessPiece.PieceType.KING) {
+                    return kingPos;
+                }
+            }
+        }
+        return null;
+    }
+
+    private boolean canEnemyAttack(ChessPosition square, TeamColor teamColor) {
+        for (int row = 1; row <= 8; row++) {
+            for (int col = 1; col <= 8; col++) {
+
+                ChessPosition pos = new ChessPosition(row, col);
+                ChessPiece enemy = board.getPiece(pos);
+
+                if (enemy == null) {
+                    continue;
+                }
+
+                if (enemy.getTeamColor() == teamColor) {
+                    continue;
+                }
+
+                Collection<ChessMove> moves = enemy.pieceMoves(board, pos);
+
+                for (ChessMove move : moves) {
+                    if (move.getEndPosition().equals(square)) {
+                        return true;
+                    }
+                }
+
+            }
+        }
+        return false;
+    }
+
 
 
     @Override

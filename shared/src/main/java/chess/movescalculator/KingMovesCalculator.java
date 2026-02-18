@@ -58,12 +58,7 @@ public class KingMovesCalculator implements PieceMovesCalculator{
                     ChessPosition fPos = new ChessPosition(rowStart, 6);
                     ChessPosition gPos = new ChessPosition(rowStart, 7);
 
-                    if (board.getPiece(fPos) == null
-                            && board.getPiece(gPos) == null
-                            && !castlingSquareChecked(board, position, color)
-                            && !castlingSquareChecked(board, fPos, color)
-                            && !castlingSquareChecked(board, gPos, color)) {
-
+                    if (board.getPiece(fPos) == null && board.getPiece(gPos) == null) {
                         moves.add(new ChessMove(position, gPos, null));
                     }
                 }
@@ -78,12 +73,7 @@ public class KingMovesCalculator implements PieceMovesCalculator{
                     ChessPosition cPos = new ChessPosition(rowStart, 3);
 
                     if (board.getPiece(new ChessPosition(rowStart, 2)) == null
-                            && board.getPiece(dPos) == null
-                            && board.getPiece(cPos) == null
-                            && !castlingSquareChecked(board, position, color)
-                            && !castlingSquareChecked(board, dPos, color)
-                            && !castlingSquareChecked(board, cPos, color)) {
-
+                            && board.getPiece(dPos) == null && board.getPiece(cPos) == null) {
                         moves.add(new ChessMove(position, cPos, null));
                     }
                 }
@@ -94,23 +84,6 @@ public class KingMovesCalculator implements PieceMovesCalculator{
         return moves;
     }
 
-    private boolean castlingSquareChecked(ChessBoard board, ChessPosition square, ChessGame.TeamColor kingColor) {
-        for (int row = 1; row <= 8; row++) {
-            for (int col = 1; col <= 8; col++) {
 
-                ChessPosition pos = new ChessPosition(row, col);
-                ChessPiece enemy = board.getPiece(pos);
 
-                if (enemy != null && enemy.getTeamColor() != kingColor) {
-                    Collection<ChessMove> moves = enemy.pieceMoves(board, pos);
-                    for (ChessMove move : moves) {
-                        if (move.getEndPosition().equals(square)) {
-                            return true;
-                        }
-                    }
-                }
-            }
-        }
-        return false;
-    }
 }
