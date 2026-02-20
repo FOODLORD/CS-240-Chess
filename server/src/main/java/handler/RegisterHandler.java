@@ -37,7 +37,7 @@ public class RegisterHandler {
                 body.status(500);
             }
 
-            body.json(Map.of("(description of error)", error.getMessage()));
+            body.json(Map.of("Error", error.getMessage()));
         }
     }
 }

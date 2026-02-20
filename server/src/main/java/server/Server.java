@@ -1,9 +1,9 @@
 package server;
 
 import dataaccess.MemoryDataAccess;
-import handler.RegisterHandler;
+import handler.*;
 import io.javalin.*;
-import service.RegisterService;
+import service.*;
 
 public class Server {
 
@@ -13,11 +13,19 @@ public class Server {
         javalin = Javalin.create(config -> config.staticFiles.add("web"));
 
         // Register your endpoints and exception handlers here.
+
+        //Register
         var database = new MemoryDataAccess();
         var registerService = new RegisterService(database);
         var registerHandler = new RegisterHandler(registerService);
 
         javalin.post("/user", registerHandler::register);
+
+        //Clear
+        ClearService clearService = new ClearService(database);
+        ClearHandler clearHandler = new ClearHandler(clearService);
+
+        javalin.delete("/db", clearHandler::clear);
 
     }
 
