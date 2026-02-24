@@ -27,6 +27,11 @@ public class Server {
 
         javalin.delete("/db", clearHandler::clear);
 
+        //Login
+        var loginService = new LoginService(database);
+        var loginHandler = new LoginHandler(loginService);
+        javalin.post("/session", loginHandler::login);
+
     }
 
     public int run(int desiredPort) {
