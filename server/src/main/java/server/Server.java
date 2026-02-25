@@ -32,6 +32,12 @@ public class Server {
         var loginHandler = new LoginHandler(loginService);
         javalin.post("/session", loginHandler::login);
 
+        //Logout
+        var logoutService = new LogoutService(database);
+        var logoutHandler = new LogoutHandler(logoutService);
+
+        javalin.delete("/session", logoutHandler::logout);
+
     }
 
     public int run(int desiredPort) {
