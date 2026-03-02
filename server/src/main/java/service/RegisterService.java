@@ -15,6 +15,10 @@ public class RegisterService {
 
     public RegisterResponse register(RegisterRequest request) throws DataAccessException {
 
+        if (request == null) {
+            throw new DataAccessException("Error: bad request");
+        }
+
         // check request
         if (request.username() == null || request.password() == null || request.email() == null) {
             throw new DataAccessException("Error: bad request");
