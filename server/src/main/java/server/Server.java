@@ -45,6 +45,13 @@ public class Server {
 
         javalin.get("/game", listGamesHandler::listGames);
 
+        //Create Game
+
+        var createGameService = new CreateGameService(database);
+        var createGameHandler = new CreateGameHandler(createGameService);
+
+        javalin.post("/game", createGameHandler::createGame);
+
     }
 
     public int run(int desiredPort) {

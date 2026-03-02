@@ -8,6 +8,7 @@ public class MemoryDataAccess implements DataAccess {
     private final Map<String, UserData> users = new HashMap<>();
     private final Map<String, AuthToken> authTokens = new HashMap<>();
     private final Map<Integer, GameData> games = new HashMap<>();
+    private int nextGameID = 1;
 
     @Override
     public UserData getUser(String username) throws DataAccessException {
@@ -41,13 +42,16 @@ public class MemoryDataAccess implements DataAccess {
     }
 
     @Override
-    public void insertGame(GameData game) throws DataAccessException {
-
+    public int createGame(GameData game) throws DataAccessException {
+        int id = nextGameID++;
+        GameData newGame = new GameData(id, null, null, game.gameName(), null);
+        games.put(id, newGame);
+        return id;
     }
 
     @Override
     public GameData getGame(int gameID) throws DataAccessException {
-        return null;
+        return games.get(gameID);
     }
 
     @Override

@@ -15,7 +15,7 @@ public interface DataAccess {
     void registerUser(UserData user) throws DataAccessException;
 
     //game
-    void insertGame(GameData game) throws DataAccessException;
+    int createGame(GameData game) throws DataAccessException;
     GameData getGame(int gameID) throws DataAccessException;
     Collection<GameData> listGames() throws DataAccessException;
     void updateGame(GameData game) throws DataAccessException;
