@@ -30,13 +30,17 @@ public class LoginHandler {
 
             if (error.getMessage().contains("unauthorized")) {
                 body.status(401);
-            } else if (error.getMessage().contains("bad request")) {
+            }
+
+            else if (error.getMessage().contains("bad request")) {
                 body.status(400);
-            } else {
+            }
+
+            else {
                 body.status(500);
             }
 
-            body.json(Map.of("Error", error.getMessage()));
+            body.json(Map.of("message", error.getMessage()));
         }
     }
 }

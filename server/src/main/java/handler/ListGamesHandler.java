@@ -27,15 +27,17 @@ public class ListGamesHandler {
 
         }
 
-        catch (DataAccessException e) {
+        catch (DataAccessException error) {
 
-            if (e.getMessage().contains("unauthorized")) {
+            if (error.getMessage().contains("unauthorized")) {
                 body.status(401);
-            } else {
+            }
+
+            else {
                 body.status(500);
             }
 
-            body.json(Map.of("message", e.getMessage()));
+            body.json(Map.of("message", error.getMessage()));
         }
     }
 }

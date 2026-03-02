@@ -16,13 +16,13 @@ public class ClearTests {
         ClearService clearService = new ClearService(dao);
 
         // Add user
-        RegisterRequest request = new RegisterRequest("bob", "123", "bob@email.com");
+        RegisterRequest request = new RegisterRequest("anna", "123", "anna@email.com");
         registerService.register(request);
 
         // Clear database
         clearService.clear();
 
-        assertNull(dao.getUser("bob"));
+        assertNull(dao.getUser("anna"));
     }
 
     @Test
@@ -33,7 +33,7 @@ public class ClearTests {
         RegisterService registerService = new RegisterService(dao);
         ClearService clearService = new ClearService(dao);
 
-        RegisterRequest request = new RegisterRequest("bob", "123", "bob@email.com");
+        RegisterRequest request = new RegisterRequest("anna", "123", "anna@email.com");
 
         registerService.register(request);
         clearService.clear();
@@ -41,7 +41,7 @@ public class ClearTests {
         //can register again
         RegisterResponse result = registerService.register(request);
 
-        assertEquals("bob", result.username());
+        assertEquals("anna", result.username());
         assertNotNull(result.authToken());
     }
 }

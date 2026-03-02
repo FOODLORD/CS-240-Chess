@@ -17,7 +17,7 @@ public class RegisterService {
 
         // check request
         if (request.username() == null || request.password() == null || request.email() == null) {
-            throw new DataAccessException("An error occurred");
+            throw new DataAccessException("Error: bad request");
         }
 
         // check current username

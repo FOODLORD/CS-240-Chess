@@ -12,11 +12,11 @@ public class RegisterTests {
         DataAccess dao = new MemoryDataAccess();
         RegisterService service = new RegisterService(dao);
 
-        RegisterRequest request = new RegisterRequest("bob", "123", "bob@email.com");
+        RegisterRequest request = new RegisterRequest("willy", "123", "willy@email.com");
 
         RegisterResponse result = service.register(request);
 
-        assertEquals("bob", result.username());
+        assertEquals("willy", result.username());
         assertNotNull(result.authToken());
     }
 
@@ -25,7 +25,7 @@ public class RegisterTests {
         DataAccess dao = new MemoryDataAccess();
         RegisterService service = new RegisterService(dao);
 
-        RegisterRequest request = new RegisterRequest("bob", "123", "bob@email.com");
+        RegisterRequest request = new RegisterRequest("willy", "123", "willy@email.com");
 
         service.register(request);
 

@@ -14,7 +14,7 @@ public class CreateGameTests {
         DataAccess dao = new MemoryDataAccess();
 
         RegisterService registerService = new RegisterService(dao);
-        RegisterRequest request = new RegisterRequest("bob", "123", "bob@email.com");
+        RegisterRequest request = new RegisterRequest("tom", "123", "tom@email.com");
         RegisterResponse registerResult = registerService.register(request);
 
         CreateGameService service = new CreateGameService(dao);
@@ -47,7 +47,7 @@ public class CreateGameTests {
 
         RegisterService registerService = new RegisterService(dao);
         RegisterResponse registerResult =
-                registerService.register(new RegisterRequest("bob", "123", "bob@email.com"));
+                registerService.register(new RegisterRequest("tom", "123", "tom@email.com"));
 
         CreateGameService service = new CreateGameService(dao);
 

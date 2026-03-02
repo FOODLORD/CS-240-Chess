@@ -61,7 +61,7 @@ public class MemoryDataAccess implements DataAccess {
 
     @Override
     public void updateGame(GameData game) throws DataAccessException {
-
+        games.put(game.gameID(), game);
     }
 
     @Override

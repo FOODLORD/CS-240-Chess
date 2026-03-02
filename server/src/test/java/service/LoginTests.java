@@ -27,11 +27,11 @@ public class LoginTests {
     @Test
     public void loginWrongPassword() throws Exception {
         DataAccess dao = new MemoryDataAccess();
-        dao.registerUser(new UserData("bob", "123", "bob@email.com"));
+        dao.registerUser(new UserData("tate", "123", "tate@email.com"));
 
         LoginService service = new LoginService(dao);
 
-        LoginRequest request = new LoginRequest("bob", "wrong");
+        LoginRequest request = new LoginRequest("tate", "wrong");
 
         assertThrows(DataAccessException.class, () -> {service.login(request);});
     }
@@ -59,11 +59,11 @@ public class LoginTests {
     @Test
     public void loginStoresAuthToken() throws Exception {
         DataAccess dao = new MemoryDataAccess();
-        dao.registerUser(new UserData("bob", "123", "bob@email.com"));
+        dao.registerUser(new UserData("tate", "123", "tate@email.com"));
 
         LoginService service = new LoginService(dao);
 
-        LoginResponse result = service.login(new LoginRequest("bob", "123"));
+        LoginResponse result = service.login(new LoginRequest("tate", "123"));
 
         assertNotNull(dao.getAuth(result.authToken()));
     }

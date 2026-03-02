@@ -22,10 +22,12 @@ public class ClearHandler {
             body.status(200);
             body.json(Map.of());
 
-        } catch (DataAccessException error) {
+        }
+
+        catch (DataAccessException error) {
 
             body.status(500);
-            body.json(Map.of("message", "Error: " + error.getMessage()));
+            body.json(Map.of("message", error.getMessage()));
         }
     }
 }

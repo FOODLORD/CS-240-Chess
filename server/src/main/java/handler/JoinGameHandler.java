@@ -7,36 +7,36 @@ import dataaccess.DataAccessException;
 import com.google.gson.Gson;
 import java.util.Map;
 
-public class CreateGameHandler {
+public class JoinGameHandler {
 
-    private final CreateGameService service;
+    private final JoinGameService service;
     private final Gson gson = new Gson();
 
-    public CreateGameHandler(CreateGameService service) {
+    public JoinGameHandler(JoinGameService service) {
         this.service = service;
     }
 
-    public void createGame(Context body) {
+    public void joinGame(Context body) {
 
         try {
 
             String authToken = body.header("authorization");
 
-            CreateGameRequest request =
-                    gson.fromJson(body.body(), CreateGameRequest.class);
+            JoinGameRequest request = gson.fromJson(body.body(), JoinGameRequest.class);
 
-            CreateGameResponse response =
-                    service.createGame(authToken, request);
+            service.joinGame(authToken, request);
 
             body.status(200);
-            body.json(response);
+            body.json(Map.of());
 
-        }
-
-        catch (DataAccessException error) {
+        } catch (DataAccessException error) {
 
             if (error.getMessage().contains("unauthorized")) {
                 body.status(401);
+            }
+
+            else if (error.getMessage().contains("already taken")) {
+                body.status(403);
             }
 
             else if (error.getMessage().contains("bad request")) {

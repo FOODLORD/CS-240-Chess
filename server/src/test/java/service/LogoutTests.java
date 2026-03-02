@@ -13,9 +13,9 @@ public class LogoutTests {
     public void logoutSuccess() throws Exception {
         DataAccess dao = new MemoryDataAccess();
 
-        dao.registerUser(new UserData("bob", "123", "bob@email.com"));
+        dao.registerUser(new UserData("clone", "123", "clone@email.com"));
 
-        AuthToken token = new AuthToken("abc", "bob");
+        AuthToken token = new AuthToken("abc", "clone");
         dao.insertAuth(token);
 
         LogoutService service = new LogoutService(dao);
@@ -30,9 +30,7 @@ public class LogoutTests {
         DataAccess dao = new MemoryDataAccess();
         LogoutService service = new LogoutService(dao);
 
-        assertThrows(DataAccessException.class, () -> {
-            service.logout("nothing");
-        });
+        assertThrows(DataAccessException.class, () -> {service.logout("nothing");});
     }
 
     @Test
@@ -40,8 +38,6 @@ public class LogoutTests {
         DataAccess dao = new MemoryDataAccess();
         LogoutService service = new LogoutService(dao);
 
-        assertThrows(DataAccessException.class, () -> {
-            service.logout(null);
-        });
+        assertThrows(DataAccessException.class, () -> {service.logout(null);});
     }
 }
