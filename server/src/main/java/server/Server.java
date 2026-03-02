@@ -38,6 +38,13 @@ public class Server {
 
         javalin.delete("/session", logoutHandler::logout);
 
+        //List games
+
+        var listGamesService = new ListGamesService(database);
+        var listGamesHandler = new ListGamesHandler(listGamesService);
+
+        javalin.get("/game", listGamesHandler::listGames);
+
     }
 
     public int run(int desiredPort) {
