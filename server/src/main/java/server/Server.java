@@ -3,14 +3,19 @@ package server;
 import dataaccess.MemoryDataAccess;
 import handler.*;
 import io.javalin.*;
+import io.javalin.json.JavalinGson;
 import service.*;
+import com.google.gson.Gson;
 
 public class Server {
 
     private final Javalin javalin;
 
     public Server() {
-        javalin = Javalin.create(config -> config.staticFiles.add("web"));
+        javalin = Javalin.create(config -> {
+            config.staticFiles.add("web");
+            config.jsonMapper(new JavalinGson());
+        });
 
         // Register your endpoints and exception handlers here.
 
