@@ -26,7 +26,7 @@ public class RegisterService {
 
         // check current username
         if (dataAccess.getUser(request.username()) != null) {
-            throw new DataAccessException("Error username already taken");
+            throw new DataAccessException("Error: already taken");
         }
 
         //register user

@@ -31,15 +31,17 @@ public class JoinGameHandler {
 
         } catch (DataAccessException error) {
 
-            if (error.getMessage().contains("unauthorized")) {
+            String message = error.getMessage();
+
+            if (message != null && message.contains("unauthorized")) {
                 body.status(401);
             }
 
-            else if (error.getMessage().contains("already taken")) {
+            else if (message != null && message.contains("already taken")) {
                 body.status(403);
             }
 
-            else if (error.getMessage().contains("bad request")) {
+            else if (message != null && message.contains("bad request")) {
                 body.status(400);
             }
 

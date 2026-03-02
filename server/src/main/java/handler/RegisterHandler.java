@@ -20,6 +20,13 @@ public class RegisterHandler {
         try {
             RegisterRequest request = gson.fromJson(body.body(), RegisterRequest.class);
 
+            if (request == null || request.username() == null || request.password() == null || request.email() == null) {
+
+                body.status(400);
+                body.json(Map.of("message", "Error: bad request"));
+                return;
+            }
+
             RegisterResponse result = service.register(request);
 
             body.status(200);
@@ -29,11 +36,15 @@ public class RegisterHandler {
 
         catch (DataAccessException error) {
 
-            if (error.getMessage().contains("already taken")) {
+            String message = error.getMessage();
+
+            if (message != null && message.contains("already taken")) {
                 body.status(403);
-            } else if (error.getMessage().contains("bad request")) {
+            }
+            else if (message != null && message.contains("bad request")) {
                 body.status(400);
-            } else {
+            }
+            else {
                 body.status(500);
             }
 

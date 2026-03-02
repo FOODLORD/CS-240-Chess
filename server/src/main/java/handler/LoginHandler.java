@@ -28,11 +28,13 @@ public class LoginHandler {
 
         catch (DataAccessException error) {
 
-            if (error.getMessage().contains("unauthorized")) {
+            String message = error.getMessage();
+
+            if (message != null && message.contains("unauthorized")) {
                 body.status(401);
             }
 
-            else if (error.getMessage().contains("bad request")) {
+            else if (message != null && message.contains("bad request")) {
                 body.status(400);
             }
 

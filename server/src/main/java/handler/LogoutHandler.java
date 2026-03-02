@@ -26,7 +26,9 @@ public class LogoutHandler {
 
         } catch (DataAccessException error) {
 
-            if (error.getMessage().contains("unauthorized")) {
+            String message = error.getMessage();
+
+            if (message != null && message.contains("unauthorized")) {
                 body.status(401);
             } else {
                 body.status(500);
