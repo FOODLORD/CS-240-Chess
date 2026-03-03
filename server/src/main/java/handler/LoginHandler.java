@@ -7,7 +7,7 @@ import service.*;
 
 import java.util.Map;
 
-public class LoginHandler {
+public class LoginHandler extends BaseHandler{
 
     private final LoginService service;
     private final Gson gson = new Gson();
@@ -28,21 +28,7 @@ public class LoginHandler {
 
         catch (DataAccessException error) {
 
-            String message = error.getMessage();
-
-            if (message != null && message.contains("unauthorized")) {
-                body.status(401);
-            }
-
-            else if (message != null && message.contains("bad request")) {
-                body.status(400);
-            }
-
-            else {
-                body.status(500);
-            }
-
-            body.json(Map.of("message", error.getMessage()));
+            handleError(body, error);
         }
     }
 }

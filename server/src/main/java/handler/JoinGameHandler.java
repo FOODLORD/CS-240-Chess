@@ -7,7 +7,7 @@ import dataaccess.DataAccessException;
 import com.google.gson.Gson;
 import java.util.Map;
 
-public class JoinGameHandler {
+public class JoinGameHandler extends BaseHandler{
 
     private final JoinGameService service;
     private final Gson gson = new Gson();
@@ -31,25 +31,7 @@ public class JoinGameHandler {
 
         } catch (DataAccessException error) {
 
-            String message = error.getMessage();
-
-            if (message != null && message.contains("unauthorized")) {
-                body.status(401);
-            }
-
-            else if (message != null && message.contains("already taken")) {
-                body.status(403);
-            }
-
-            else if (message != null && message.contains("bad request")) {
-                body.status(400);
-            }
-
-            else {
-                body.status(500);
-            }
-
-            body.json(Map.of("message", error.getMessage()));
+            handleError(body, error);
         }
     }
 }

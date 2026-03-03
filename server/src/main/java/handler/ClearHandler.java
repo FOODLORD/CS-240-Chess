@@ -6,7 +6,7 @@ import service.ClearService;
 
 import java.util.Map;
 
-public class ClearHandler {
+public class ClearHandler extends BaseHandler{
 
     private final ClearService service;
 
@@ -26,8 +26,7 @@ public class ClearHandler {
 
         catch (DataAccessException error) {
 
-            body.status(500);
-            body.json(Map.of("message", error.getMessage()));
+            handleError(body, error);
         }
     }
 }

@@ -6,7 +6,7 @@ import service.*;
 import dataaccess.DataAccessException;
 import java.util.Map;
 
-public class ListGamesHandler {
+public class ListGamesHandler extends BaseHandler{
 
     private final ListGamesService service;
 
@@ -29,17 +29,7 @@ public class ListGamesHandler {
 
         catch (DataAccessException error) {
 
-            String message = error.getMessage();
-
-            if (message != null && message.contains("unauthorized")) {
-                body.status(401);
-            }
-
-            else {
-                body.status(500);
-            }
-
-            body.json(Map.of("message", error.getMessage()));
+            handleError(body, error);
         }
     }
 }

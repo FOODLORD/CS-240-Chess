@@ -6,7 +6,7 @@ import service.LogoutService;
 
 import java.util.Map;
 
-public class LogoutHandler {
+public class LogoutHandler extends BaseHandler{
 
     private final LogoutService service;
 
@@ -26,15 +26,7 @@ public class LogoutHandler {
 
         } catch (DataAccessException error) {
 
-            String message = error.getMessage();
-
-            if (message != null && message.contains("unauthorized")) {
-                body.status(401);
-            } else {
-                body.status(500);
-            }
-
-            body.json(Map.of("message", error.getMessage()));
+            handleError(body, error);
         }
     }
 }

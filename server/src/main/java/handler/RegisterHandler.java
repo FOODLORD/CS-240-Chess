@@ -7,7 +7,7 @@ import service.*;
 
 import java.util.Map;
 
-public class RegisterHandler {
+public class RegisterHandler extends BaseHandler{
 
     private final RegisterService service;
     private final Gson gson = new Gson();
@@ -36,19 +36,7 @@ public class RegisterHandler {
 
         catch (DataAccessException error) {
 
-            String message = error.getMessage();
-
-            if (message != null && message.contains("already taken")) {
-                body.status(403);
-            }
-            else if (message != null && message.contains("bad request")) {
-                body.status(400);
-            }
-            else {
-                body.status(500);
-            }
-
-            body.json(Map.of("message", error.getMessage()));
+            handleError(body, error);
         }
     }
 }
