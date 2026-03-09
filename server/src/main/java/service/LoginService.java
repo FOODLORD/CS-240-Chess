@@ -28,7 +28,7 @@ public class LoginService {
 
         UserData user = dataAccess.getUser(request.username());
 
-        if (user == null || BCrypt.checkpw(request.password(), user.password())) {
+        if (user == null || !BCrypt.checkpw(request.password(), user.password())) {
             throw new DataAccessException("Error: unauthorized");
         }
 
