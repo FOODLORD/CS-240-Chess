@@ -3,6 +3,7 @@ package dataaccess;
 import model.*;
 import chess.ChessGame;
 import com.google.gson.Gson;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.*;
 import java.util.*;
@@ -89,8 +90,10 @@ public class MySqlDataAccess implements DataAccess {
         try (var conn = DatabaseManager.getConnection();
              var statement = conn.prepareStatement(sql)) {
 
+            String hashPassword = BCrypt.hashpw(user.password(), BCrypt.gensalt());
+
             statement.setString(1, user.username());
-            statement.setString(2, user.password());
+            statement.setString(2, hashPassword);
             statement.setString(3, user.email());
 
             statement.executeUpdate();

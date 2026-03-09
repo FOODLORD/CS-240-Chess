@@ -1,6 +1,7 @@
 package server;
 
-import dataaccess.MemoryDataAccess;
+//import dataaccess.MemoryDataAccess;
+import dataaccess.*;
 import handler.*;
 import io.javalin.*;
 import io.javalin.json.JavalinGson;
@@ -20,7 +21,14 @@ public class Server {
         // Register your endpoints and exception handlers here.
 
         //Register
-        var database = new MemoryDataAccess();
+        //var database = new MemoryDataAccess();
+        DataAccess database;
+        try {
+            database = new MySqlDataAccess();
+        } catch (DataAccessException error) {
+            throw new RuntimeException("Database failed", error);
+        }
+
         var registerService = new RegisterService(database);
         var registerHandler = new RegisterHandler(registerService);
 
