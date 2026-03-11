@@ -1,9 +1,9 @@
-package service;
+package dataaccess;
 
-import dataaccess.*;
 import model.*;
 import org.junit.jupiter.api.*;
 import chess.ChessGame;
+import service.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -75,8 +75,40 @@ public class MySqlTests {
 
         registerService.register(request);
 
-        // duplicate
+
         assertThrows(DataAccessException.class, () -> {registerService.register(request);});
+    }
+
+    @Test
+    @DisplayName("RegisterUserDuplicateDAO")
+    void registerUserDuplicateDAO() throws DataAccessException {
+
+        UserData user = new UserData("han","password","email@gmail.com");
+
+        dataAccess.registerUser(user);
+
+        assertThrows(DataAccessException.class, () -> {dataAccess.registerUser(user);});
+    }
+
+    @Test
+    @DisplayName("GetUserSuccess")
+    void getUserSuccess() throws DataAccessException {
+
+        dataAccess.registerUser(new UserData("han","password","email@gmail.com"));
+
+        UserData user = dataAccess.getUser("han");
+
+        assertNotNull(user);
+        assertEquals("han", user.username());
+    }
+
+    @Test
+    @DisplayName("UserNotFound")
+    void userNotFound() throws DataAccessException {
+
+        UserData user = dataAccess.getUser("notimportant");
+
+        assertNull(user);
     }
 
     @Test
@@ -111,6 +143,28 @@ public class MySqlTests {
     }
 
     @Test
+    @DisplayName("InsertAuthSuccess")
+    void insertAuthSuccess() throws DataAccessException {
+
+        AuthToken token = new AuthToken("123","person");
+
+        dataAccess.insertAuth(token);
+
+        AuthToken stored = dataAccess.getAuth("123");
+
+        assertNotNull(stored);
+    }
+
+    @Test
+    @DisplayName("AuthMissing")
+    void authMissing() throws DataAccessException {
+
+        AuthToken auth = dataAccess.getAuth("notfound");
+
+        assertNull(auth);
+    }
+
+    @Test
     @DisplayName("MySqlLogoutSuccess")
     void logoutSuccess() throws DataAccessException {
 
@@ -140,6 +194,34 @@ public class MySqlTests {
     void logoutWithWrongToken() {
 
         assertThrows(DataAccessException.class, () -> {logoutService.logout("tokenformnowhere");});
+    }
+
+    @Test
+    @DisplayName("DeleteAuthSuccess")
+    void deleteAuthSuccess() throws DataAccessException {
+
+        AuthToken token = new AuthToken("321","karie");
+
+        dataAccess.insertAuth(token);
+
+        dataAccess.deleteAuth("321");
+
+        assertNull(dataAccess.getAuth("321"));
+    }
+
+    @Test
+    @DisplayName("Delete2Times")
+    void deleteAuth2Times() throws DataAccessException {
+
+        AuthToken token = new AuthToken("789","qwerty");
+
+        dataAccess.insertAuth(token);
+
+        dataAccess.deleteAuth("789");
+
+        dataAccess.deleteAuth("789");
+
+        assertNull(dataAccess.getAuth("789"));
     }
 
     @Test
@@ -181,6 +263,36 @@ public class MySqlTests {
     }
 
     @Test
+    @DisplayName("CreateGameEmptyGame")
+    void createGameEmptyGame() {
+
+        assertThrows(DataAccessException.class, () -> {dataAccess.createGame(null);});
+    }
+
+    @Test
+    @DisplayName("GetGameSuccess")
+    void getGameSuccess() throws DataAccessException {
+
+        ChessGame game = new ChessGame();
+
+        int id = dataAccess.createGame(new GameData(0,null,null,"greatgame",game));
+
+        GameData stored = dataAccess.getGame(id);
+
+        assertNotNull(stored);
+        assertEquals("greatgame", stored.gameName());
+    }
+
+    @Test
+    @DisplayName("GetGameEmptyDatabase")
+    void getGameMissing() throws DataAccessException {
+
+        GameData game = dataAccess.getGame(1);
+
+        assertNull(game);
+    }
+
+    @Test
     @DisplayName("MySqlListGameSuccess")
     void listGamesSuccess() throws DataAccessException {
 
@@ -214,6 +326,18 @@ public class MySqlTests {
     }
 
     @Test
+    @DisplayName("ListGamesDAO")
+    void listGamesDAO() throws DataAccessException {
+
+        ChessGame game = new ChessGame();
+
+        dataAccess.createGame(new GameData(0,null,null,"1game",game));
+        dataAccess.createGame(new GameData(0,null,null,"2game",game));
+
+        assertEquals(2, dataAccess.listGames().size());
+    }
+
+    @Test
     @DisplayName("MySqlJoinGameSuccess")
     void joinGameSuccess() throws DataAccessException {
 
@@ -234,10 +358,10 @@ public class MySqlTests {
 
         joinGameService.joinGame(token, join);
 
-        GameData GameInProgress = dataAccess.getGame(gameID);
+        GameData gameInProgress = dataAccess.getGame(gameID);
 
-        assertEquals("crox", GameInProgress.whiteUsername());
-        assertNotNull(GameInProgress);
+        assertEquals("crox", gameInProgress.whiteUsername());
+        assertNotNull(gameInProgress);
     }
 
     @Test
@@ -254,6 +378,34 @@ public class MySqlTests {
         } catch (DataAccessException error) {
             assertNotNull(error);
         }
+    }
+
+    @Test
+    @DisplayName("UpdateGameSuccess")
+    void updateGameSuccess() throws DataAccessException {
+
+        ChessGame game = new ChessGame();
+
+        int id = dataAccess.createGame(new GameData(0,null,null,"anothergame",game));
+
+        GameData updated = new GameData(id,"karie",null,"anothergame",game);
+
+        dataAccess.updateGame(updated);
+
+        GameData result = dataAccess.getGame(id);
+
+        assertEquals("karie", result.whiteUsername());
+    }
+
+    @Test
+    @DisplayName("UpdateGameInvalidID")
+    void updateGameInvalidID() {
+
+        ChessGame game = new ChessGame();
+
+        GameData invalidgame = new GameData(369,null,null,"nogame",game);
+
+        assertThrows(DataAccessException.class, () -> {dataAccess.updateGame(invalidgame);});
     }
 
 

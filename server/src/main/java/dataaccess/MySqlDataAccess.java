@@ -170,6 +170,10 @@ public class MySqlDataAccess implements DataAccess {
     @Override
     public int createGame(GameData game) throws DataAccessException {
 
+        if (game == null) {
+            throw new DataAccessException("Error: empty game");
+        }
+
         String sql = """
             INSERT INTO games (whiteUsername, blackUsername, gameName, gameState)
             VALUES (?, ?, ?, ?)
@@ -211,11 +215,17 @@ public class MySqlDataAccess implements DataAccess {
 
             if (rs.next()) {
 
-                Gson gson = new Gson();
-                ChessGame game = gson.fromJson(
-                        rs.getString("gameState"),
-                        ChessGame.class
-                );
+                String json = rs.getString("gameState");
+
+                ChessGame game = null;
+
+                if (json != null) {
+                    try {
+                        game = new Gson().fromJson(json, ChessGame.class);
+                    } catch (Exception error) {
+                        game = new ChessGame();
+                    }
+                }
 
                 return new GameData(
                         rs.getInt("gameID"),
@@ -244,21 +254,15 @@ public class MySqlDataAccess implements DataAccess {
              var statement = conn.prepareStatement(sql)) {
 
             var rs = statement.executeQuery();
-            Gson gson = new Gson();
 
             while (rs.next()) {
-
-                ChessGame game = gson.fromJson(
-                        rs.getString("gameState"),
-                        ChessGame.class
-                );
 
                 games.add(new GameData(
                         rs.getInt("gameID"),
                         rs.getString("whiteUsername"),
                         rs.getString("blackUsername"),
                         rs.getString("gameName"),
-                        game
+                        null
                 ));
             }
 
@@ -289,7 +293,11 @@ public class MySqlDataAccess implements DataAccess {
             statement.setString(4, gson.toJson(game.game()));
             statement.setInt(5, game.gameID());
 
-            statement.executeUpdate();
+            int rowsUpdated = statement.executeUpdate();
+
+            if (rowsUpdated == 0) {
+                throw new DataAccessException("Error: game does not exist");
+            }
 
         } catch (SQLException error) {
             throw new DataAccessException("Error: cannot update game", error);
