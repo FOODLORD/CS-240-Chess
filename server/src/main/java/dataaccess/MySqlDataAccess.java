@@ -11,6 +11,7 @@ import java.util.*;
 public class MySqlDataAccess implements DataAccess {
 
     public MySqlDataAccess() throws DataAccessException {
+
         configureDatabase();
     }
 
@@ -47,7 +48,7 @@ public class MySqlDataAccess implements DataAccess {
             """);
 
         } catch (SQLException error) {
-            throw new DataAccessException("Database setup failed", error);
+            throw new DataAccessException("Error: Database setup failed", error);
         }
     }
 
@@ -75,7 +76,7 @@ public class MySqlDataAccess implements DataAccess {
             return null;
 
         } catch (SQLException error) {
-            throw new DataAccessException("Error retrieving user", error);
+            throw new DataAccessException("Error: cannot retrieve user", error);
         }
     }
 
@@ -99,7 +100,7 @@ public class MySqlDataAccess implements DataAccess {
             statement.executeUpdate();
 
         } catch (SQLException error) {
-            throw new DataAccessException("Username already exists", error);
+            throw new DataAccessException("Error: Username already exists", error);
         }
     }
 
@@ -119,7 +120,7 @@ public class MySqlDataAccess implements DataAccess {
             statement.executeUpdate();
 
         } catch (SQLException error) {
-            throw new DataAccessException("Error inserting auth token", error);
+            throw new DataAccessException("Error: cannot insert auth token", error);
         }
     }
 
@@ -144,7 +145,7 @@ public class MySqlDataAccess implements DataAccess {
             return null;
 
         } catch (SQLException error) {
-            throw new DataAccessException("Error retrieving auth token", error);
+            throw new DataAccessException("Error: cannot retrieve auth token", error);
         }
     }
 
@@ -160,7 +161,7 @@ public class MySqlDataAccess implements DataAccess {
             statement.executeUpdate();
 
         } catch (SQLException error) {
-            throw new DataAccessException("Error deleting auth token", error);
+            throw new DataAccessException("Error: cannot delete auth token", error);
         }
     }
 
@@ -192,7 +193,7 @@ public class MySqlDataAccess implements DataAccess {
             return rs.getInt(1);
 
         } catch (SQLException error) {
-            throw new DataAccessException("Error creating game", error);
+            throw new DataAccessException("Error: cannot create game", error);
         }
     }
 
@@ -228,7 +229,7 @@ public class MySqlDataAccess implements DataAccess {
             return null;
 
         } catch (SQLException error) {
-            throw new DataAccessException("Error retrieving game", error);
+            throw new DataAccessException("Error: cannot retrieve game", error);
         }
     }
 
@@ -264,7 +265,7 @@ public class MySqlDataAccess implements DataAccess {
             return games;
 
         } catch (SQLException error) {
-            throw new DataAccessException("Error listing games", error);
+            throw new DataAccessException("Error: cannot list games", error);
         }
     }
 
@@ -291,7 +292,7 @@ public class MySqlDataAccess implements DataAccess {
             statement.executeUpdate();
 
         } catch (SQLException error) {
-            throw new DataAccessException("Error updating game", error);
+            throw new DataAccessException("Error: cannot update game", error);
         }
     }
 
@@ -309,7 +310,7 @@ public class MySqlDataAccess implements DataAccess {
             statement.executeUpdate("DELETE FROM games");
 
         } catch (SQLException error) {
-            throw new DataAccessException("Error clearing database", error);
+            throw new DataAccessException("Error: cannot clear database", error);
         }
     }
 }

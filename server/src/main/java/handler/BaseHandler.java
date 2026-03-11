@@ -9,7 +9,7 @@ public abstract class BaseHandler {
         String message = error.getMessage();
 
         if (message == null) {
-            message = "Error: message is null";
+            message = "message is null";
         }
 
         if (message.contains("unauthorized")) {
@@ -22,6 +22,6 @@ public abstract class BaseHandler {
             body.status(500);
         }
 
-        body.json(Map.of("message", message));
+        body.json(Map.of("message", "Error: " +  message));
     }
 }
