@@ -309,6 +309,8 @@ public class MySqlDataAccess implements DataAccess {
             statement.executeUpdate("DELETE FROM auth");
             statement.executeUpdate("DELETE FROM games");
 
+            statement.executeUpdate("ALTER TABLE games AUTO_INCREMENT = 1");
+
         } catch (SQLException error) {
             throw new DataAccessException("Error: cannot clear database", error);
         }
