@@ -13,7 +13,7 @@ public class ListGamesService {
         this.dataAccess = dataAccess;
     }
 
-    public ListGamesResponse listGames(String authToken)
+    public model.ListGamesResponse listGames(String authToken)
             throws DataAccessException {
 
         if (authToken == null) {

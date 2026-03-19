@@ -18,7 +18,7 @@ public class RegisterHandler extends BaseHandler{
 
     public void register(Context body) {
         try {
-            RegisterRequest request = gson.fromJson(body.body(), RegisterRequest.class);
+            model.RegisterRequest request = gson.fromJson(body.body(), model.RegisterRequest.class);
 
             if (request == null || request.username() == null || request.password() == null || request.email() == null) {
 
@@ -27,7 +27,7 @@ public class RegisterHandler extends BaseHandler{
                 return;
             }
 
-            RegisterResponse result = service.register(request);
+            model.RegisterResponse result = service.register(request);
 
             body.status(200);
             body.json(result);

@@ -16,7 +16,7 @@ public class ClearTests {
         ClearService clearService = new ClearService(dao);
 
         // Add user
-        RegisterRequest request = new RegisterRequest("anna", "123", "anna@email.com");
+        model.RegisterRequest request = new model.RegisterRequest("anna", "123", "anna@email.com");
         registerService.register(request);
 
         // Clear database
@@ -33,13 +33,13 @@ public class ClearTests {
         RegisterService registerService = new RegisterService(dao);
         ClearService clearService = new ClearService(dao);
 
-        RegisterRequest request = new RegisterRequest("anna", "123", "anna@email.com");
+        model.RegisterRequest request = new model.RegisterRequest("anna", "123", "anna@email.com");
 
         registerService.register(request);
         clearService.clear();
 
         //can register again
-        RegisterResponse result = registerService.register(request);
+        model.RegisterResponse result = registerService.register(request);
 
         assertEquals("anna", result.username());
         assertNotNull(result.authToken());

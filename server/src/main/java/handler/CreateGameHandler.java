@@ -5,7 +5,6 @@ import service.*;
 import dataaccess.DataAccessException;
 
 import com.google.gson.Gson;
-import java.util.Map;
 
 public class CreateGameHandler extends BaseHandler{
 
@@ -22,9 +21,9 @@ public class CreateGameHandler extends BaseHandler{
 
             String authToken = body.header("authorization");
 
-            CreateGameRequest request = gson.fromJson(body.body(), CreateGameRequest.class);
+            model.CreateGameRequest request = gson.fromJson(body.body(), model.CreateGameRequest.class);
 
-            CreateGameResponse response = service.createGame(authToken, request);
+            model.CreateGameResponse response = service.createGame(authToken, request);
 
             body.status(200);
             body.json(response);

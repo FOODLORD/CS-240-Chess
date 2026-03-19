@@ -4,6 +4,7 @@ import dataaccess.*;
 import model.*;
 
 import java.util.UUID;
+import org.mindrot.jbcrypt.BCrypt;
 
 public class RegisterService {
 
@@ -13,7 +14,7 @@ public class RegisterService {
         this.dataAccess = dataAccess;
     }
 
-    public RegisterResponse register(RegisterRequest request) throws DataAccessException {
+    public RegisterResponse register(model.RegisterRequest request) throws DataAccessException {
 
         if (request == null) {
             throw new DataAccessException("Error: bad request");
@@ -29,8 +30,15 @@ public class RegisterService {
             throw new DataAccessException("Error: already taken");
         }
 
-        //register user
-        UserData user = new UserData(request.username(), request.password(), request.email());
+
+        String hashedPassword = BCrypt.hashpw(request.password(), BCrypt.gensalt());
+
+
+        UserData user = new UserData(
+                request.username(),
+                hashedPassword,
+                request.email()
+        );
 
         dataAccess.registerUser(user);
 

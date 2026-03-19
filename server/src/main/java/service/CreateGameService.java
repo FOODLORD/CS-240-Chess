@@ -11,7 +11,7 @@ public class CreateGameService {
         this.dataAccess = dataAccess;
     }
 
-    public CreateGameResponse createGame(String authToken, CreateGameRequest request)
+    public CreateGameResponse createGame(String authToken, model.CreateGameRequest request)
             throws DataAccessException {
 
         if (authToken == null || dataAccess.getAuth(authToken) == null) {

@@ -17,7 +17,7 @@ public class JoinGameTests {
         RegisterResponse registerResult = registerService.register(new RegisterRequest("anny", "123", "anny@email.com"));
 
         CreateGameService createGameService = new CreateGameService(dao);
-        CreateGameResponse createResult = createGameService.createGame(registerResult.authToken(), new CreateGameRequest("Game 1"));
+        CreateGameResponse createResult = createGameService.createGame(registerResult.authToken(), new model.CreateGameRequest("Game 1"));
 
         JoinGameService joinService = new JoinGameService(dao);
 

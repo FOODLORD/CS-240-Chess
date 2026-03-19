@@ -4,7 +4,6 @@ import io.javalin.http.Context;
 import service.*;
 
 import dataaccess.DataAccessException;
-import java.util.Map;
 
 public class ListGamesHandler extends BaseHandler{
 
@@ -19,7 +18,7 @@ public class ListGamesHandler extends BaseHandler{
 
             String authToken = body.header("authorization");
 
-            ListGamesResponse response =
+            model.ListGamesResponse response =
                     service.listGames(authToken);
 
             body.status(200);

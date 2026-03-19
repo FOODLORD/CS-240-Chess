@@ -2,8 +2,7 @@ package service;
 
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
-import model.AuthToken;
-import model.UserData;
+import model.*;
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.util.UUID;
@@ -16,7 +15,7 @@ public class LoginService {
         this.dataAccess = dataAccess;
     }
 
-    public LoginResponse login(LoginRequest request) throws DataAccessException {
+    public model.LoginResponse login(LoginRequest request) throws DataAccessException {
 
         if (request == null) {
             throw new DataAccessException("Error: bad request");
@@ -28,7 +27,12 @@ public class LoginService {
 
         UserData user = dataAccess.getUser(request.username());
 
-        if (user == null || !BCrypt.checkpw(request.password(), user.password())) {
+        try {
+            if (user == null || !BCrypt.checkpw(request.password(), user.password())) {
+                throw new DataAccessException("Error: unauthorized");
+            }
+        } catch (IllegalArgumentException error) {
+
             throw new DataAccessException("Error: unauthorized");
         }
 
@@ -37,6 +41,6 @@ public class LoginService {
 
         dataAccess.insertAuth(token);
 
-        return new LoginResponse(user.username(), tokenString);
+        return new model.LoginResponse(user.username(), tokenString);
     }
 }

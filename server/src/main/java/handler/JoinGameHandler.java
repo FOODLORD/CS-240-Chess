@@ -22,7 +22,7 @@ public class JoinGameHandler extends BaseHandler{
 
             String authToken = body.header("authorization");
 
-            JoinGameRequest request = gson.fromJson(body.body(), JoinGameRequest.class);
+            model.JoinGameRequest request = gson.fromJson(body.body(), model.JoinGameRequest.class);
 
             service.joinGame(authToken, request);
 

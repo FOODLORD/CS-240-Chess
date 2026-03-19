@@ -4,8 +4,7 @@ import com.google.gson.Gson;
 import dataaccess.DataAccessException;
 import io.javalin.http.Context;
 import service.*;
-
-import java.util.Map;
+import model.*;
 
 public class LoginHandler extends BaseHandler{
 
@@ -20,7 +19,7 @@ public class LoginHandler extends BaseHandler{
         try {
             LoginRequest request = gson.fromJson(body.body(), LoginRequest.class);
 
-            LoginResponse result = service.login(request);
+            model.LoginResponse result = service.login(request);
 
             body.status(200);
             body.json(result);

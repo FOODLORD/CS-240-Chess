@@ -11,7 +11,7 @@ public class JoinGameService {
         this.dataAccess = dataAccess;
     }
 
-    public void joinGame(String authToken, JoinGameRequest request) throws DataAccessException {
+    public void joinGame(String authToken, model.JoinGameRequest request) throws DataAccessException {
 
         if (authToken == null || dataAccess.getAuth(authToken) == null) {
             throw new DataAccessException("Error: unauthorized");

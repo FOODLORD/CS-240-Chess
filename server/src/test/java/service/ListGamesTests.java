@@ -24,7 +24,7 @@ public class ListGamesTests {
 
         ListGamesService service = new ListGamesService(dao);
 
-        ListGamesResponse result = service.listGames(registerResult.authToken());
+        model.ListGamesResponse result = service.listGames(registerResult.authToken());
 
         Collection<GameData> games = result.games();
 

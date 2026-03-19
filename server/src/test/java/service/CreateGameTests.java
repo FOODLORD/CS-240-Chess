@@ -19,7 +19,7 @@ public class CreateGameTests {
 
         CreateGameService service = new CreateGameService(dao);
 
-        CreateGameRequest createRequest = new CreateGameRequest("New Game");
+        model.CreateGameRequest createRequest = new CreateGameRequest("New Game");
 
         CreateGameResponse result = service.createGame(registerResult.authToken(), createRequest);
 

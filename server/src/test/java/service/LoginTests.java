@@ -3,6 +3,7 @@ package service;
 import dataaccess.*;
 import model.UserData;
 import org.junit.jupiter.api.Test;
+import model.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -12,13 +13,14 @@ public class LoginTests {
     public void loginSuccess() throws Exception {
         DataAccess dao = new MemoryDataAccess();
 
-        dao.registerUser(new UserData("bob", "123", "bob@email.com"));
+        RegisterService registerService = new RegisterService(dao);
+        registerService.register(new RegisterRequest("bob", "123", "bob@email.com"));
 
         LoginService service = new LoginService(dao);
 
         LoginRequest request = new LoginRequest("bob", "123");
 
-        LoginResponse result = service.login(request);
+        model.LoginResponse result = service.login(request);
 
         assertEquals("bob", result.username());
         assertNotNull(result.authToken());
@@ -27,7 +29,8 @@ public class LoginTests {
     @Test
     public void loginWrongPassword() throws Exception {
         DataAccess dao = new MemoryDataAccess();
-        dao.registerUser(new UserData("tate", "123", "tate@email.com"));
+        RegisterService registerService = new RegisterService(dao);
+        registerService.register(new RegisterRequest("tate", "123", "tate@email.com"));
 
         LoginService service = new LoginService(dao);
 
@@ -59,11 +62,12 @@ public class LoginTests {
     @Test
     public void loginStoresAuthToken() throws Exception {
         DataAccess dao = new MemoryDataAccess();
-        dao.registerUser(new UserData("tate", "123", "tate@email.com"));
+        RegisterService registerService = new RegisterService(dao);
+        registerService.register(new RegisterRequest("tate", "123", "tate@email.com"));
 
         LoginService service = new LoginService(dao);
 
-        LoginResponse result = service.login(new LoginRequest("tate", "123"));
+        model.LoginResponse result = service.login(new LoginRequest("tate", "123"));
 
         assertNotNull(dao.getAuth(result.authToken()));
     }
