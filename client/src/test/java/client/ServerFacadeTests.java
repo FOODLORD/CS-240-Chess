@@ -248,6 +248,75 @@ public class ServerFacadeTests {
         Assertions.assertEquals("CoolGame", games.getFirst().gameName());
     }
 
+    @Test
+    @DisplayName("joinGameWhite")
+    public void joinGameWhite() throws Exception {
+
+        facade.register(new RegisterRequest("nemo", "password", "email@gmail.com"));
+        LoginResponse login = facade.login(new LoginRequest("nemo", "password"));
+
+        String token = login.authToken();
+
+        CreateGameResponse game = facade.createGame(token, new CreateGameRequest("First"));
+
+        Assertions.assertDoesNotThrow(() -> {
+            facade.joinGame(token, new JoinGameRequest("WHITE", game.gameID()));
+        });
+    }
+
+    @Test
+    @DisplayName("joinGameBlack")
+    public void joinGameBlack() throws Exception {
+
+        facade.register(new RegisterRequest("dora", "password", "email@gmail.com"));
+        LoginResponse login = facade.login(new LoginRequest("dora", "password"));
+
+        String token = login.authToken();
+
+        CreateGameResponse game = facade.createGame(token, new CreateGameRequest("Second"));
+
+        Assertions.assertDoesNotThrow(() -> {
+            facade.joinGame(token, new JoinGameRequest("BLACK", game.gameID()));
+        });
+    }
+
+    @Test
+    @DisplayName("joinGameInvalidGameID")
+    public void joinGameInvalidGameID() throws Exception {
+
+        facade.register(new RegisterRequest("stitch", "password", "email@gmail.com"));
+        LoginResponse login = facade.login(new LoginRequest("stitch", "password"));
+
+        String token = login.authToken();
+
+        Assertions.assertThrows(ResponseException.class, () -> {
+            facade.joinGame(token, new JoinGameRequest("WHITE", 369));
+        });
+    }
+
+    @Test
+    @DisplayName("joinGameSameTeam")
+    public void joinGameSameTeam() throws Exception {
+
+
+        facade.register(new RegisterRequest("sam", "password", "email@gmail.com"));
+        LoginResponse login1 = facade.login(new LoginRequest("sam", "password"));
+        String token1 = login1.authToken();
+
+        CreateGameResponse game = facade.createGame(token1, new CreateGameRequest("okay"));
+
+        facade.joinGame(token1, new JoinGameRequest("WHITE", game.gameID()));
+
+
+        facade.register(new RegisterRequest("tam", "password", "email@gmail.com"));
+        LoginResponse login2 = facade.login(new LoginRequest("tam", "password"));
+        String token2 = login2.authToken();
+
+        Assertions.assertThrows(ResponseException.class, () -> {
+            facade.joinGame(token2, new JoinGameRequest("WHITE", game.gameID()));
+        });
+    }
+
 
 
 
