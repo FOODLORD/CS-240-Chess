@@ -49,6 +49,13 @@ public class ServerFacade {
         handleResponse(response, null);
     }
 
+    //creategame
+    public CreateGameResponse createGame(String authToken, CreateGameRequest request) throws ResponseException {
+        var httpRequest = buildRequest("POST", "/game", request, authToken);
+        var response = sendRequest(httpRequest);
+        return handleResponse(response, CreateGameResponse.class);
+    }
+
 
     //helper func
 

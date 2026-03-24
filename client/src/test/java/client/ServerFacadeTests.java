@@ -139,5 +139,52 @@ public class ServerFacadeTests {
         Assertions.assertThrows(ResponseException.class, () -> {facade.logout(null);});
     }
 
+    @Test
+    @DisplayName("createGameSuccess")
+    public void createGameSuccess() throws Exception {
+
+        facade.register(new RegisterRequest("lily", "password", "email@gmail.com"));
+        LoginResponse login = facade.login(new LoginRequest("lily", "password"));
+
+        String token = login.authToken();
+
+        CreateGameResponse response = facade.createGame(token, new CreateGameRequest("Newgame"));
+
+        Assertions.assertNotNull(response);
+        Assertions.assertTrue(response.gameID() > 0);
+    }
+
+    @Test
+    @DisplayName("createGameBadToken")
+    public void createGameBadToken() {
+
+        Assertions.assertThrows(ResponseException.class, () -> {
+            facade.createGame("notatoken", new CreateGameRequest("Anothergame"));
+        });
+    }
+
+    @Test
+    @DisplayName("createGameNoName")
+    public void createGameNoName() throws Exception {
+
+        facade.register(new RegisterRequest("noname", "noname", "email@gmail.com"));
+        LoginResponse login = facade.login(new LoginRequest("noname", "noname"));
+
+        String token = login.authToken();
+
+        Assertions.assertThrows(ResponseException.class, () -> {
+            facade.createGame(token, new CreateGameRequest(null));
+        });
+    }
+
+    @Test
+    @DisplayName("createGameNoToken")
+    public void createGameNoToken() {
+
+        Assertions.assertThrows(ResponseException.class, () -> {
+            facade.createGame(null, new CreateGameRequest("notoken"));
+        });
+    }
+
 
 }
