@@ -49,6 +49,10 @@ public class JoinGameService {
 
         }
 
+        else if (request.playerColor() == null) {
+            return;
+        }
+
         else {
             throw new DataAccessException("Error: bad request");
         }

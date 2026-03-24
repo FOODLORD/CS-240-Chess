@@ -6,7 +6,6 @@ import handler.*;
 import io.javalin.*;
 import io.javalin.json.JavalinGson;
 import service.*;
-import com.google.gson.Gson;
 
 public class Server {
 
