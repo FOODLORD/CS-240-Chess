@@ -20,7 +20,7 @@ public class ChessClient {
     private final ChessGame currentGame = new ChessGame();
     private final ChessGame.TeamColor playerColor = ChessGame.TeamColor.WHITE;
 
-    private List<GameData> ListGames = new ArrayList<>();
+    private List<GameData> listGames = new ArrayList<>();
 
     public ChessClient(String serverUrl) {
         server = new ServerFacade(serverUrl);
@@ -139,16 +139,16 @@ public class ChessClient {
         assertSignedIn();
         ListGamesResponse response = server.listGames(authToken);
 
-        ListGames = new ArrayList<>(response.games());
+        listGames = new ArrayList<>(response.games());
 
-        if (ListGames.isEmpty()) {
+        if (listGames.isEmpty()) {
             return "No games found.";
         }
 
         StringBuilder result = new StringBuilder();
 
-        for (int i = 0; i < ListGames.size(); i++) {
-            GameData game = ListGames.get(i);
+        for (int i = 0; i < listGames.size(); i++) {
+            GameData game = listGames.get(i);
 
             String whiteUser = (game.whiteUsername() == null) ? "-" : game.whiteUsername();
             String blackUser = (game.blackUsername() == null) ? "-" : game.blackUsername();
@@ -182,12 +182,12 @@ public class ChessClient {
             throw new ResponseException(ResponseException.Code.ClientError,"Game number must be a number");
         }
 
-        if (index < 0 || index >= ListGames.size()) {
+        if (index < 0 || index >= listGames.size()) {
             throw new ResponseException(ResponseException.Code.ClientError,"Invalid game ID");
         }
 
         String color = params[1].toUpperCase();
-        int gameID = ListGames.get(index).gameID();
+        int gameID = listGames.get(index).gameID();
 
         server.joinGame(authToken, new JoinGameRequest(color, gameID));
 
@@ -213,13 +213,13 @@ public class ChessClient {
             throw new ResponseException(ResponseException.Code.ClientError, "Game number must be a number");
         }
 
-        if (index < 0 || index >= ListGames.size()) {
+        if (index < 0 || index >= listGames.size()) {
             throw new ResponseException(ResponseException.Code.ClientError, "Invalid game ID: " + index);
         }
 
-        int gameID = ListGames.get(index).gameID();
+        int gameID = listGames.get(index).gameID();
 
-        GameData game = ListGames.get(index);
+        GameData game = listGames.get(index);
         ChessGame observedGame = game.game();
 
 
@@ -272,7 +272,7 @@ public class ChessClient {
     }
 
     private void checkList() throws  ResponseException{
-        if (ListGames == null || ListGames.isEmpty()) {
+        if (listGames == null || listGames.isEmpty()) {
             throw new ResponseException(ResponseException.Code.ClientError, "You must list games first"
             );
         }

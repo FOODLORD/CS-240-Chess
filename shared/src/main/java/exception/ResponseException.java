@@ -22,9 +22,6 @@ public class ResponseException extends Exception {
     }
 
 
-//    public String toJson() {
-//        return new Gson().toJson(Map.of("message", getMessage(), "status", code));
-//    }
 
     private static class ErrorResponse {
         String message;
@@ -56,10 +53,4 @@ public class ResponseException extends Exception {
     }
 
 
-//    public int toHttpStatusCode() {
-//        return switch (code) {
-//            case ServerError -> 500;
-//            case ClientError -> 400;
-//        };
-//    }
 }
