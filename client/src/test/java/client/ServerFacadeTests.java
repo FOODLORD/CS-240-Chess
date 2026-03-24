@@ -97,5 +97,47 @@ public class ServerFacadeTests {
         });
     }
 
+    @Test
+    @DisplayName("logoutSuccess")
+    public void logoutSuccess() throws Exception {
+
+        facade.register(new RegisterRequest("logoutUser", "pass", "email@test.com"));
+        LoginResponse login = facade.login(new LoginRequest("logoutUser", "pass"));
+
+        String token = login.authToken();
+
+
+        facade.logout(token);
+
+        Assertions.assertTrue(true);
+    }
+
+    @Test
+    @DisplayName("logoutFakeToken")
+    public void logoutFakeToken() {
+        Assertions.assertThrows(ResponseException.class, () -> {
+            facade.logout("testtoken");
+        });
+    }
+
+    @Test
+    @DisplayName("logoutTwice")
+    public void logoutTwice() throws Exception {
+        facade.register(new RegisterRequest("lilo", "password", "email@gmail.com"));
+        LoginResponse login = facade.login(new LoginRequest("lilo", "password"));
+
+        String token = login.authToken();
+
+        facade.logout(token);
+
+        Assertions.assertThrows(ResponseException.class, () -> {facade.logout(token);});
+    }
+
+    @Test
+    @DisplayName("logoutNoToken")
+    public void logoutNoToken() {
+        Assertions.assertThrows(ResponseException.class, () -> {facade.logout(null);});
+    }
+
 
 }

@@ -42,6 +42,13 @@ public class ServerFacade {
         handleResponse(response, null);
     }
 
+    //logout
+    public void logout(String authToken) throws ResponseException {
+        var httpRequest = buildRequest("DELETE", "/session", null, authToken);
+        var response = sendRequest(httpRequest);
+        handleResponse(response, null);
+    }
+
 
     //helper func
 
