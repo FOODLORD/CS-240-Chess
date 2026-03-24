@@ -4,6 +4,7 @@ import java.util.*;
 import java.util.Arrays;
 import java.util.Scanner;
 
+import chess.*;
 import exception.ResponseException;
 import model.*;
 
@@ -15,6 +16,9 @@ public class ChessClient {
     private final ServerFacade server;
     private State state = State.SIGNEDOUT;
     private String authToken = null;
+
+    private final ChessGame currentGame = new ChessGame();
+    private final ChessGame.TeamColor playerColor = ChessGame.TeamColor.WHITE;
 
     private List<GameData> ListGames = new ArrayList<>();
 
@@ -38,6 +42,10 @@ public class ChessClient {
                 System.out.println(result + RESET_TEXT_COLOR);
             }
 
+            catch (ResponseException error){
+                printError(error);
+            }
+
             catch (Exception error) {
                 System.out.println(SET_TEXT_COLOR_RED + error.getMessage() + RESET_TEXT_COLOR);
             }
@@ -50,8 +58,8 @@ public class ChessClient {
         System.out.print("\n[" + state + "] >>> " + RESET_TEXT_COLOR);
     }
 
-    public String eval(String input) {
-        try {
+    public String eval(String input) throws ResponseException {
+
             String[] tokens = input.toLowerCase().split(" ");
             String cmd = (tokens.length > 0) ? tokens[0] : "help";
             String[] params = Arrays.copyOfRange(tokens, 1, tokens.length);
@@ -75,21 +83,17 @@ public class ChessClient {
                     case "logout" -> logout();
                     case "help" -> help();
                     case "quit" -> "quit";
-                    case "clear" -> clear();
+                    case "clearDatabase" -> clear();
                     default -> help();
                 };
             }
 
-        }
 
-        catch (ResponseException ex) {
-            return ex.getMessage();
-        }
     }
 
     public String register(String... params) throws ResponseException {
         if (params.length != 3) {
-            throw new ResponseException(ResponseException.Code.ClientError, SET_TEXT_COLOR_RED + "Expected: register <username> <password> <email>");
+            throw new ResponseException(ResponseException.Code.ClientError,"Expected: register <username> <password> <email>");
         }
 
         RegisterResponse response = server.register(new RegisterRequest(params[0], params[1], params[2]));
@@ -102,7 +106,7 @@ public class ChessClient {
 
     public String login(String... params) throws ResponseException {
         if (params.length != 2) {
-            throw new ResponseException(ResponseException.Code.ClientError, SET_TEXT_COLOR_RED + "Expected: login <username> <password>");
+            throw new ResponseException(ResponseException.Code.ClientError,"Expected: login <username> <password>");
         }
 
         LoginResponse response = server.login(new LoginRequest(params[0], params[1]));
@@ -118,13 +122,13 @@ public class ChessClient {
         server.logout(authToken);
         authToken = null;
         state = State.SIGNEDOUT;
-        return "Logged out.";
+        return SET_TEXT_COLOR_MAGENTA + "Logged out.";
     }
 
     public String createGame(String... params) throws ResponseException {
         assertSignedIn();
         if (params.length != 1) {
-            throw new ResponseException(ResponseException.Code.ClientError, SET_TEXT_COLOR_RED + "Expected: create <name>");
+            throw new ResponseException(ResponseException.Code.ClientError, "Expected: create <name>");
         }
 
         server.createGame(authToken, new CreateGameRequest(params[0]));
@@ -164,19 +168,22 @@ public class ChessClient {
 
     public String joinGame(String... params) throws ResponseException {
         assertSignedIn();
+        checkList();
         if (params.length != 2) {
-            throw new ResponseException(ResponseException.Code.ClientError, SET_TEXT_COLOR_RED + "Expected: join <ID> <WHITE|BLACK>");
+            throw new ResponseException(ResponseException.Code.ClientError, "Expected: join <ID> <WHITE|BLACK>");
         }
 
         int index;
         try {
             index = Integer.parseInt(params[0]) - 1;
-        } catch (NumberFormatException e) {
-            throw new ResponseException(ResponseException.Code.ClientError, SET_TEXT_COLOR_RED + "Game number must be a number");
+        }
+
+        catch (NumberFormatException e) {
+            throw new ResponseException(ResponseException.Code.ClientError,"Game number must be a number");
         }
 
         if (index < 0 || index >= ListGames.size()) {
-            throw new ResponseException(ResponseException.Code.ClientError, SET_TEXT_COLOR_RED + "Invalid game ID");
+            throw new ResponseException(ResponseException.Code.ClientError,"Invalid game ID");
         }
 
         String color = params[1].toUpperCase();
@@ -184,31 +191,42 @@ public class ChessClient {
 
         server.joinGame(authToken, new JoinGameRequest(color, gameID));
 
+        state = State.INGAME;
+        drawBoard(currentGame, playerColor);
+
         return "Joined game as " + color;
     }
 
     public String observeGame(String... params) throws ResponseException {
         assertSignedIn();
+        checkList();
         if (params.length != 1) {
-            throw new ResponseException(ResponseException.Code.ClientError, SET_TEXT_COLOR_RED + "Expected: observe <ID>");
+            throw new ResponseException(ResponseException.Code.ClientError, "Expected: observe <ID>");
         }
 
         int index;
         try {
             index = Integer.parseInt(params[0]) - 1;
-        } catch (NumberFormatException e) {
-            throw new ResponseException(ResponseException.Code.ClientError, SET_TEXT_COLOR_RED + "Game number must be a number");
+        }
+
+        catch (NumberFormatException e) {
+            throw new ResponseException(ResponseException.Code.ClientError, "Game number must be a number");
         }
 
         if (index < 0 || index >= ListGames.size()) {
-            throw new ResponseException(ResponseException.Code.ClientError, SET_TEXT_COLOR_RED + "Invalid game ID");
+            throw new ResponseException(ResponseException.Code.ClientError, "Invalid game ID: " + index);
         }
 
         int gameID = ListGames.get(index).gameID();
 
-        server.joinGame(authToken, new JoinGameRequest(null, gameID));
+        GameData game = ListGames.get(index);
+        ChessGame observedGame = game.game();
 
-        return "Observing game";
+
+        state = State.INGAME;
+        drawBoard(observedGame, ChessGame.TeamColor.WHITE);
+
+        return SET_TEXT_COLOR_GREEN + "Observing game " + gameID + RESET_TEXT_COLOR;
     }
 
 
@@ -241,12 +259,125 @@ public class ChessClient {
         return SET_TEXT_COLOR_MAGENTA + "Database cleared." + RESET_TEXT_COLOR;
     }
 
+    private void printError(ResponseException error) {
+        String color;
 
+        if (error.code() == ResponseException.Code.ServerError) {
+            color = SET_TEXT_COLOR_RED;
+        } else {
+            color = SET_TEXT_COLOR_YELLOW;
+        }
+
+        System.out.println(color + error.getMessage() + RESET_TEXT_COLOR);
+    }
+
+    private void checkList() throws  ResponseException{
+        if (ListGames == null || ListGames.isEmpty()) {
+            throw new ResponseException(ResponseException.Code.ClientError, "You must list games first"
+            );
+        }
+    }
 
     private void assertSignedIn() throws ResponseException {
         if (state == State.SIGNEDOUT) {
-            throw new ResponseException(ResponseException.Code.ClientError, SET_TEXT_COLOR_RED + "You must sign in");
+            throw new ResponseException(ResponseException.Code.ClientError, "You must sign in");
         }
+    }
+
+    //========================= drawBoard functions
+
+    private void drawBoard(ChessGame game, ChessGame.TeamColor color) {
+        System.out.println();
+
+        boolean isWhite;
+        isWhite = color == ChessGame.TeamColor.WHITE;
+
+
+        printColumnLabels(isWhite);
+
+        for (int row = (isWhite ? 8 : 1);
+             isWhite ? row >= 1 : row <= 8;
+             row += (isWhite ? -1 : 1)) {
+
+            printRow(row, isWhite, game);
+        }
+
+        printColumnLabels(isWhite);
+
+        System.out.println();
+    }
+
+    private void printRow(int row, boolean isWhite, ChessGame game) {
+
+        // left row number
+        System.out.print(" " + row + " ");
+
+        for (int col = (isWhite ? 1 : 8);
+             isWhite ? col <= 8 : col >= 1;
+             col += (isWhite ? 1 : -1)) {
+
+            boolean lightSquare = (row + col) % 2 == 0;
+
+            // set background color
+            if (lightSquare) {
+                System.out.print(SET_BG_COLOR_LIGHT_GREY);
+            } else {
+                System.out.print(SET_BG_COLOR_MAGENTA);
+            }
+
+            ChessPiece piece = game.getBoard().getPiece(new ChessPosition(row, col));
+
+            if (piece != null) {
+                System.out.print(getPieceSymbol(piece));
+            } else {
+                System.out.print(EMPTY);
+            }
+
+            System.out.print(RESET_BG_COLOR);
+        }
+
+        // right row number
+        System.out.println(" " + row);
+    }
+
+    private void printColumnLabels(boolean isWhite) {
+        System.out.print("   ");
+
+        if (isWhite) {
+            for (char letter = 'a'; letter <= 'h'; letter++) {
+                System.out.print(" "+ letter + "  ");
+            }
+        }
+
+        else {
+            for (char letter = 'h'; letter >= 'a'; letter--) {
+                System.out.print(" " + letter + "  ");
+            }
+        }
+
+        System.out.println();
+    }
+
+    private String getPieceSymbol(ChessPiece piece) {
+        return switch (piece.getPieceType()) {
+            case KING -> piece.getTeamColor() == ChessGame.TeamColor.WHITE
+                    ? WHITE_KING : BLACK_KING;
+
+            case QUEEN -> piece.getTeamColor() == ChessGame.TeamColor.WHITE
+                    ? WHITE_QUEEN : BLACK_QUEEN;
+
+            case BISHOP -> piece.getTeamColor() == ChessGame.TeamColor.WHITE
+                    ? WHITE_BISHOP : BLACK_BISHOP;
+
+            case KNIGHT -> piece.getTeamColor() == ChessGame.TeamColor.WHITE
+                    ? WHITE_KNIGHT : BLACK_KNIGHT;
+
+            case ROOK -> piece.getTeamColor() == ChessGame.TeamColor.WHITE
+                    ? WHITE_ROOK : BLACK_ROOK;
+
+            case PAWN -> piece.getTeamColor() == ChessGame.TeamColor.WHITE
+                    ? WHITE_PAWN : BLACK_PAWN;
+        };
     }
 
 }

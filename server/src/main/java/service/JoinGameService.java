@@ -17,7 +17,7 @@ public class JoinGameService {
             throw new DataAccessException("Error: unauthorized");
         }
 
-        if (request == null || request.playerColor() == null) {
+        if (request == null) {
             throw new DataAccessException("Error: bad request");
         }
 
@@ -29,7 +29,14 @@ public class JoinGameService {
 
         String username = dataAccess.getAuth(authToken).username();
 
-        if (request.playerColor().equals("WHITE")) {
+        String color = request.playerColor();
+
+
+        if (color == null) {
+            throw new DataAccessException("Error: bad request");
+        }
+
+        if (color.equals("WHITE")) {
 
             if (game.whiteUsername() != null) {
                 throw new DataAccessException("Error: already taken");
@@ -39,7 +46,7 @@ public class JoinGameService {
 
         }
 
-        else if (request.playerColor().equals("BLACK")) {
+        else if (color.equals("BLACK")) {
 
             if (game.blackUsername() != null) {
                 throw new DataAccessException("Error: already taken");
@@ -47,10 +54,6 @@ public class JoinGameService {
 
             game = new GameData(game.gameID(), game.whiteUsername(), username, game.gameName(), game.game());
 
-        }
-
-        else if (request.playerColor() == null) {
-            return;
         }
 
         else {

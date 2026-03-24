@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import exception.ResponseException;
 import model.*;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.http.*;
 import java.net.http.HttpRequest.BodyPublisher;
@@ -109,11 +108,11 @@ public class ServerFacade {
 
         if (status / 100 != 2) {
             var body = response.body();
-            if (body != null) {
-                throw ResponseException.fromJson(body);
-            }
 
-            throw new ResponseException(ResponseException.fromHttpStatusCode(status), "other failure: " + status);
+            String message = ResponseException.fromJson(body).getMessage();
+            ResponseException.Code code = ResponseException.fromHttpStatusCode(status);
+
+            throw new ResponseException(code, message);
         }
 
         if (responseClass != null) {

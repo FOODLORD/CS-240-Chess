@@ -2,8 +2,6 @@ package exception;
 
 import com.google.gson.Gson;
 
-import java.util.HashMap;
-import java.util.Map;
 
 public class ResponseException extends Exception {
 
@@ -24,24 +22,28 @@ public class ResponseException extends Exception {
     }
 
 
-    public String toJson() {
-        return new Gson().toJson(Map.of("message", getMessage(), "status", code));
-    }
+//    public String toJson() {
+//        return new Gson().toJson(Map.of("message", getMessage(), "status", code));
+//    }
 
+    private static class ErrorResponse {
+        String message;
+    }
 
     public static ResponseException fromJson(String json) {
         try {
-            var map = new Gson().fromJson(json, HashMap.class);
+            ErrorResponse error = new Gson().fromJson(json, ErrorResponse.class);
 
-            String status = map.get("status").toString();
-            String message = map.get("message").toString();
+            if (error != null && error.message != null) {
+                return new ResponseException(Code.ClientError, error.message);
+            }
 
-            return new ResponseException(Code.valueOf(status), message);
-
-        } catch (Exception error) {
-
-            return new ResponseException(Code.ServerError, json);
         }
+
+        catch (Exception ignored) {
+        }
+
+        return new ResponseException(Code.ServerError, "Error: server error");
     }
 
 
@@ -54,10 +56,10 @@ public class ResponseException extends Exception {
     }
 
 
-    public int toHttpStatusCode() {
-        return switch (code) {
-            case ServerError -> 500;
-            case ClientError -> 400;
-        };
-    }
+//    public int toHttpStatusCode() {
+//        return switch (code) {
+//            case ServerError -> 500;
+//            case ClientError -> 400;
+//        };
+//    }
 }
