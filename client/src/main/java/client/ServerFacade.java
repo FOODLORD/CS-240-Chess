@@ -56,6 +56,13 @@ public class ServerFacade {
         return handleResponse(response, CreateGameResponse.class);
     }
 
+    //listgames
+    public ListGamesResponse listGames(String authToken) throws ResponseException {
+        var httpRequest = buildRequest("GET", "/game", null, authToken);
+        var response = sendRequest(httpRequest);
+        return handleResponse(response, ListGamesResponse.class);
+    }
+
 
     //helper func
 

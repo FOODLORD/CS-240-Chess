@@ -5,6 +5,9 @@ import model.*;
 import org.junit.jupiter.api.*;
 import server.Server;
 
+import java.util.ArrayList;
+import java.util.List;
+
 
 public class ServerFacadeTests {
 
@@ -185,6 +188,67 @@ public class ServerFacadeTests {
             facade.createGame(null, new CreateGameRequest("notoken"));
         });
     }
+
+    @Test
+    @DisplayName("listGamesEmpty")
+    public void listGamesEmpty() throws Exception {
+
+        facade.register(new RegisterRequest("lisa", "password", "email@gmail.com"));
+        LoginResponse login = facade.login(new LoginRequest("lisa", "password"));
+
+        String token = login.authToken();
+
+        ListGamesResponse response = facade.listGames(token);
+
+        Assertions.assertNotNull(response);
+        Assertions.assertEquals(0, response.games().size());
+    }
+
+    @Test
+    @DisplayName("listGamesSuccess")
+    public void listGamesSuccess() throws Exception {
+
+        facade.register(new RegisterRequest("lisa", "password", "email@gmail.com"));
+        LoginResponse login = facade.login(new LoginRequest("lisa", "password"));
+
+        String token = login.authToken();
+
+        facade.createGame(token, new CreateGameRequest("Gaming"));
+        facade.createGame(token, new CreateGameRequest("Gamed"));
+
+        ListGamesResponse response = facade.listGames(token);
+
+        Assertions.assertNotNull(response);
+        Assertions.assertEquals(2, response.games().size());
+    }
+
+    @Test
+    @DisplayName("listGamesNoToken")
+    public void listGamesNoToken() {
+
+        Assertions.assertThrows(ResponseException.class, () -> {
+            facade.listGames(null);
+        });
+    }
+
+    @Test
+    @DisplayName("listGamesCheckName")
+    public void listGamesCheckName() throws Exception {
+
+        facade.register(new RegisterRequest("listUser3", "pass", "email@test.com"));
+        LoginResponse login = facade.login(new LoginRequest("listUser3", "pass"));
+
+        String token = login.authToken();
+
+        facade.createGame(token, new CreateGameRequest("CoolGame"));
+
+        ListGamesResponse response = facade.listGames(token);
+        List<GameData> games = new ArrayList<>(response.games());
+
+        Assertions.assertEquals("CoolGame", games.getFirst().gameName());
+    }
+
+
 
 
 }
