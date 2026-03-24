@@ -19,6 +19,11 @@ public class ServerFacadeTests {
         System.out.println("Started test HTTP server on " + port);
     }
 
+    @BeforeEach
+    public void clearDatabase() throws Exception {
+        facade.clear();
+    }
+
     @AfterAll
     static void stopServer() {
         server.stop();
@@ -51,4 +56,46 @@ public class ServerFacadeTests {
 
         Assertions.assertThrows(ResponseException.class, () -> {facade.register(request);});
     }
+
+    @Test
+    @DisplayName("loginSuccess")
+    public void loginSuccess() throws Exception {
+
+        facade.register(new RegisterRequest("someguy", "password", "email@gmail.com"));
+
+
+        LoginResponse response = facade.login(new LoginRequest("someguy", "password"));
+
+        Assertions.assertNotNull(response);
+        Assertions.assertEquals("someguy", response.username());
+        Assertions.assertNotNull(response.authToken());
+    }
+
+    @Test
+    @DisplayName("wrongPass")
+    public void loginWrongPassword() throws Exception {
+        facade.register(new RegisterRequest("someguy", "password", "email@gmail.com"));
+
+        Assertions.assertThrows(ResponseException.class, () -> {
+            facade.login(new LoginRequest("someguy", "blehhh"));
+        });
+    }
+
+    @Test
+    @DisplayName("haventregister")
+    public void loginNoRegister() {
+        Assertions.assertThrows(ResponseException.class, () -> {
+            facade.login(new LoginRequest("blank", "password"));
+        });
+    }
+
+    @Test
+    @DisplayName("noUsername")
+    public void loginNoUser() {
+        Assertions.assertThrows(ResponseException.class, () -> {
+            facade.login(new LoginRequest(null, "pass"));
+        });
+    }
+
+
 }
