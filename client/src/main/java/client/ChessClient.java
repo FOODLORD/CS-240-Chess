@@ -17,8 +17,8 @@ public class ChessClient {
     private State state = State.SIGNEDOUT;
     private String authToken = null;
 
-    private final ChessGame currentGame = new ChessGame();
-    private final ChessGame.TeamColor playerColor = ChessGame.TeamColor.WHITE;
+    private ChessGame currentGame = new ChessGame();
+    private ChessGame.TeamColor playerColor = ChessGame.TeamColor.WHITE;
 
     private List<GameData> listGames = new ArrayList<>();
 
@@ -187,14 +187,35 @@ public class ChessClient {
         }
 
         String color = params[1].toUpperCase();
+
+        if (color.equals("WHITE")) {
+            playerColor = ChessGame.TeamColor.WHITE;
+        } else {
+            playerColor = ChessGame.TeamColor.BLACK;
+        }
+
         int gameID = listGames.get(index).gameID();
 
         server.joinGame(authToken, new JoinGameRequest(color, gameID));
 
         state = State.INGAME;
+
+        ListGamesResponse response = server.listGames(authToken);
+        listGames = new ArrayList<>(response.games());
+
+
+        GameData game = listGames.get(index);
+        currentGame= game.game();
+
+
+
+        if (currentGame == null) {
+            currentGame = new ChessGame();
+        }
+
         drawBoard(currentGame, playerColor);
 
-        return "Joined game as " + color;
+        return SET_TEXT_COLOR_GREEN + "Joined game as " + color + RESET_TEXT_COLOR;
     }
 
     public String observeGame(String... params) throws ResponseException {
@@ -220,11 +241,16 @@ public class ChessClient {
         int gameID = listGames.get(index).gameID();
 
         GameData game = listGames.get(index);
-        ChessGame observedGame = game.game();
+        currentGame = game.game();
+
+        if (currentGame == null) {
+            currentGame = new ChessGame();
+        }
+
 
 
         state = State.INGAME;
-        drawBoard(observedGame, ChessGame.TeamColor.WHITE);
+        drawBoard(currentGame, ChessGame.TeamColor.WHITE);
 
         return SET_TEXT_COLOR_GREEN + "Observing game " + gameID + RESET_TEXT_COLOR;
     }
@@ -333,7 +359,7 @@ public class ChessClient {
                 System.out.print(EMPTY);
             }
 
-            System.out.print(RESET_BG_COLOR);
+            System.out.print(RESET_BG_COLOR + RESET_TEXT_COLOR);
         }
 
         // right row number
@@ -361,22 +387,22 @@ public class ChessClient {
     private String getPieceSymbol(ChessPiece piece) {
         return switch (piece.getPieceType()) {
             case KING -> piece.getTeamColor() == ChessGame.TeamColor.WHITE
-                    ? WHITE_KING : BLACK_KING;
+                    ? SET_TEXT_COLOR_WHITE + WHITE_KING : SET_TEXT_COLOR_BLACK + BLACK_KING;
 
             case QUEEN -> piece.getTeamColor() == ChessGame.TeamColor.WHITE
-                    ? WHITE_QUEEN : BLACK_QUEEN;
+                    ? SET_TEXT_COLOR_WHITE + WHITE_QUEEN : SET_TEXT_COLOR_BLACK + BLACK_QUEEN;
 
             case BISHOP -> piece.getTeamColor() == ChessGame.TeamColor.WHITE
-                    ? WHITE_BISHOP : BLACK_BISHOP;
+                    ? SET_TEXT_COLOR_WHITE + WHITE_BISHOP : SET_TEXT_COLOR_BLACK + BLACK_BISHOP;
 
             case KNIGHT -> piece.getTeamColor() == ChessGame.TeamColor.WHITE
-                    ? WHITE_KNIGHT : BLACK_KNIGHT;
+                    ? SET_TEXT_COLOR_WHITE + WHITE_KNIGHT : SET_TEXT_COLOR_BLACK + BLACK_KNIGHT;
 
             case ROOK -> piece.getTeamColor() == ChessGame.TeamColor.WHITE
-                    ? WHITE_ROOK : BLACK_ROOK;
+                    ? SET_TEXT_COLOR_WHITE + WHITE_ROOK : SET_TEXT_COLOR_BLACK + BLACK_ROOK;
 
             case PAWN -> piece.getTeamColor() == ChessGame.TeamColor.WHITE
-                    ? WHITE_PAWN : BLACK_PAWN;
+                    ? SET_TEXT_COLOR_WHITE + WHITE_PAWN : SET_TEXT_COLOR_BLACK + BLACK_PAWN;
         };
     }
 
