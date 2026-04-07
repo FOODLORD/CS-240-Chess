@@ -1,11 +1,14 @@
 package server;
 
 //import dataaccess.MemoryDataAccess;
+import com.google.gson.Gson;
 import dataaccess.*;
 import handler.*;
 import io.javalin.*;
 import io.javalin.json.JavalinGson;
 import service.*;
+import websocket.*;
+import websocket.messages.ErrorMessage;
 
 public class Server {
 
@@ -71,6 +74,25 @@ public class Server {
 
         javalin.put("/game", joinGameHandler::joinGame);
 
+        WebSocketHandler wsHandler = new WebSocketHandler(database);
+
+        javalin.ws("/ws", ws -> {
+            ws.onMessage(ctx -> {
+                try {
+                    wsHandler.onMessage(ctx.session, ctx.message());
+                } catch (Exception error) {
+
+                    System.out.println("Error: " + error.getMessage());
+
+                    try {
+                        var errorMsg = new ErrorMessage("Error: " + error.getMessage());
+                        ctx.session.getRemote().sendString(new Gson().toJson(errorMsg));
+                    } catch (Exception e) {
+                        System.out.println("Error: Failed to send error message");
+                    }
+                }
+            });
+        });
     }
 
     public int run(int desiredPort) {
