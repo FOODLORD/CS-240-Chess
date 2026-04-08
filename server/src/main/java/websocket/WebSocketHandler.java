@@ -35,6 +35,9 @@ public class WebSocketHandler {
     private void connect(Session session, UserGameCommand command) throws Exception {
 
         var auth = dataAccess.getAuth(command.getAuthToken());
+        if (auth == null) {
+            throw new Exception("Error: unauthorized");
+        }
         String username = auth.username();
 
 
@@ -42,7 +45,14 @@ public class WebSocketHandler {
 
 
         var gameData = dataAccess.getGame(command.getGameID());
+        if (gameData == null) {
+            throw new Exception("Error: bad request");
+        }
+
         var game = gameData.game();
+        if (game == null) {
+            game = new ChessGame();
+        }
 
         session.getRemote().sendString(new Gson().toJson(new LoadGameMessage(game)));
 
@@ -137,7 +147,58 @@ public class WebSocketHandler {
 
     }
 
-    private void leave(Session session, UserGameCommand command) throws Exception {}
+    private void leave(Session session, UserGameCommand command) throws Exception {
+        var auth = dataAccess.getAuth(command.getAuthToken());
+        if (auth == null) {
+            throw new Exception("Error: unauthorized");
+        }
+
+        String username = auth.username();
+        int gameID = command.getGameID();
+
+
+        connectionManager.remove(gameID, session);
+
+        var gameData = dataAccess.getGame(gameID);
+        if (gameData == null) {
+            throw new Exception("Error: bad request");
+        }
+
+        String whiteUsername = gameData.whiteUsername();
+        String blackUsername = gameData.blackUsername();
+        String gameName = gameData.gameName();
+        ChessGame game = gameData.game();
+
+        boolean leftGame = false;
+
+        if (username.equals(whiteUsername)) {
+            whiteUsername = null;
+            leftGame = true;
+        }
+
+        else if (username.equals(blackUsername)) {
+            blackUsername = null;
+            leftGame = true;
+        }
+
+        if (leftGame) {
+            GameData updatedGame = new GameData(
+                    gameID,
+                    whiteUsername,
+                    blackUsername,
+                    gameName,
+                    game
+            );
+
+            dataAccess.updateGame(updatedGame);
+        }
+
+        connectionManager.broadcast(
+                gameID,
+                session,
+                new NotificationMessage(username + " left the game")
+        );
+    }
 
     private void resign(Session session, UserGameCommand command) throws Exception {}
 }
