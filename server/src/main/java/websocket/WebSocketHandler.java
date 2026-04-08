@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import org.eclipse.jetty.websocket.api.Session;
 
 import websocket.commands.UserGameCommand;
+import websocket.messages.*;
 
 
 public class WebSocketHandler {
@@ -26,7 +27,36 @@ public class WebSocketHandler {
         }
     }
 
-    private void connect(Session session, UserGameCommand command) throws Exception {}
+    private void connect(Session session, UserGameCommand command) throws Exception {
+
+        var auth = dataAccess.getAuth(command.getAuthToken());
+        String username = auth.username();
+
+
+        connectionManager.add(command.getGameID(), new Connection(username, session));
+
+
+        var gameData = dataAccess.getGame(command.getGameID());
+        var game = gameData.game();
+
+        session.getRemote().sendString(new Gson().toJson(new LoadGameMessage(game)));
+
+        String message;
+
+        if (username.equals(gameData.whiteUsername())) {
+            message = username + " joined as WHITE";
+        } else if (username.equals(gameData.blackUsername())) {
+            message = username + " joined as BLACK";
+        } else {
+            message = username + " joined as an observer";
+        }
+
+        connectionManager.broadcast(
+                command.getGameID(),
+                session,
+                new NotificationMessage(message)
+        );
+    }
 
     private void makeMove(Session session, UserGameCommand command) throws Exception {}
 
