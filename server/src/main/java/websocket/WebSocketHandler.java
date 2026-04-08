@@ -18,19 +18,35 @@ public class WebSocketHandler {
         this.dataAccess = dataAccess;
     }
 
-    public void onMessage(Session session, String message) throws Exception {
+    public void onMessage(Session session, String message) {
 
         Gson gson = new Gson();
-        UserGameCommand command = gson.fromJson(message, UserGameCommand.class);
 
-        switch (command.getCommandType()) {
-            case CONNECT -> connect(session, command);
-            case MAKE_MOVE -> {
-                MakeMoveCommand moveCommand = gson.fromJson(message, MakeMoveCommand.class);
-                makeMove(session, moveCommand);
+        try {
+            UserGameCommand command = gson.fromJson(message, UserGameCommand.class);
+
+            if (command == null || command.getCommandType() == null) {
+                ErrorMessage error = new ErrorMessage("Error: invalid command");
+                session.getRemote().sendString(gson.toJson(error));
+                return;
             }
-            case LEAVE -> leave(session, command);
-            case RESIGN -> resign(session, command);
+
+            switch (command.getCommandType()) {
+                case CONNECT -> connect(session, command);
+                case MAKE_MOVE -> {
+                    MakeMoveCommand moveCommand = gson.fromJson(message, MakeMoveCommand.class);
+                    makeMove(session, moveCommand);
+                }
+                case LEAVE -> leave(session, command);
+                case RESIGN -> resign(session, command);
+            }
+        }
+        catch (Exception e) {
+            try {
+                ErrorMessage error = new ErrorMessage("Error: " + e.getMessage());
+                session.getRemote().sendString(gson.toJson(error));
+            } catch (Exception ignored) {}
+
         }
     }
 
@@ -113,6 +129,10 @@ public class WebSocketHandler {
         }
 
         var move = command.getMove();
+
+        if (move == null) {
+            throw new Exception("Error: invalid move");
+        }
 
         boolean isCheckmate;
         boolean isStalemate;

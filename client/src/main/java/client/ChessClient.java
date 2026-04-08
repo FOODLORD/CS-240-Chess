@@ -7,6 +7,9 @@ import java.util.Scanner;
 import chess.*;
 import exception.ResponseException;
 import model.*;
+import websocket.commands.MakeMoveCommand;
+import websocket.commands.UserGameCommand;
+import websocket.messages.*;
 
 
 import static ui.EscapeSequences.*;
@@ -21,6 +24,9 @@ public class ChessClient {
     private ChessGame.TeamColor playerColor = ChessGame.TeamColor.WHITE;
 
     private List<GameData> listGames = new ArrayList<>();
+
+    private WebSocketManager webSocket;
+    private int currentGameID;
 
     public ChessClient(String serverUrl) {
         server = new ServerFacade(serverUrl);
@@ -73,8 +79,7 @@ public class ChessClient {
                     default -> help();
                 };
             }
-
-            else {
+            else if (state.equals(State.SIGNEDIN)) {
                 return switch (cmd) {
                     case "create" -> createGame(params);
                     case "list" -> listGames();
@@ -87,6 +92,20 @@ public class ChessClient {
                     default -> help();
                 };
             }
+
+            else if (state == State.INGAME) {
+                return switch (cmd) {
+                    case "move" -> makeMove(params);
+                    case "leave" -> leaveGame();
+                    case "resign" -> resignGame();
+                    case "redraw" -> redraw();
+                    case "help" -> inGameHelp();
+                    case "highlight" -> highlight(params);
+                    default -> inGameHelp();
+                };
+            }
+
+        return "";
 
 
     }
@@ -178,7 +197,7 @@ public class ChessClient {
             index = Integer.parseInt(params[0]) - 1;
         }
 
-        catch (NumberFormatException e) {
+        catch (NumberFormatException error) {
             throw new ResponseException(ResponseException.Code.ClientError,"Game number must be a number");
         }
 
@@ -196,9 +215,21 @@ public class ChessClient {
 
         int gameID = listGames.get(index).gameID();
 
+        currentGameID = gameID;
+
         server.joinGame(authToken, new JoinGameRequest(color, gameID));
 
         state = State.INGAME;
+        try {
+            webSocket = new WebSocketManager();
+
+            webSocket.connect("ws://localhost:8080/ws", this::serverMessage);
+
+            webSocket.send(new UserGameCommand(UserGameCommand.CommandType.CONNECT, authToken, gameID));
+        }
+        catch (Exception error) {
+            System.out.println("WebSocket error: " + error.getMessage());
+        }
 
         ListGamesResponse response = server.listGames(authToken);
         listGames = new ArrayList<>(response.games());
@@ -221,6 +252,9 @@ public class ChessClient {
     public String observeGame(String... params) throws ResponseException {
         assertSignedIn();
         checkList();
+
+        playerColor = ChessGame.TeamColor.WHITE;
+
         if (params.length != 1) {
             throw new ResponseException(ResponseException.Code.ClientError, "Expected: observe <ID>");
         }
@@ -240,6 +274,8 @@ public class ChessClient {
 
         int gameID = listGames.get(index).gameID();
 
+        currentGameID = gameID;
+
         GameData game = listGames.get(index);
         currentGame = game.game();
 
@@ -247,10 +283,21 @@ public class ChessClient {
             currentGame = new ChessGame();
         }
 
-
-
         state = State.INGAME;
-        drawBoard(currentGame, ChessGame.TeamColor.WHITE);
+
+        try {
+            webSocket = new WebSocketManager();
+
+            String serverUrl = server.getServerUrl().replace("http", "ws") + "/ws";
+            webSocket.connect(serverUrl, this::serverMessage);
+
+            webSocket.send(new UserGameCommand(UserGameCommand.CommandType.CONNECT, authToken, gameID));
+        }
+        catch (Exception error) {
+            System.out.println("WebSocket error: " + error.getMessage());
+        }
+
+        drawBoard(currentGame, playerColor);
 
         return SET_TEXT_COLOR_GREEN + "Observing game " + gameID + RESET_TEXT_COLOR;
     }
@@ -309,6 +356,126 @@ public class ChessClient {
             throw new ResponseException(ResponseException.Code.ClientError, "You must sign in");
         }
     }
+
+    public String makeMove(String... params) {
+        if (params.length != 2) {
+            return "Usage: move <start> <end>";
+        }
+
+        try {
+            ChessPosition start = parsePosition(params[0]);
+            ChessPosition end = parsePosition(params[1]);
+
+            ChessMove move = new ChessMove(start, end, null);
+
+            webSocket.send(new MakeMoveCommand(authToken, currentGameID, move));
+
+        } catch (Exception error) {
+            return error.getMessage();
+        }
+
+        return "";
+    }
+
+    private ChessPosition parsePosition(String input) throws Exception {
+        if (input.length() != 2) {
+            throw new Exception("Invalid position. Use example like e2");
+        }
+
+        char colChar = input.charAt(0);
+        char rowChar = input.charAt(1);
+
+        int col = colChar - 'a' + 1;
+        int row = rowChar - '0';
+
+        if (col < 1 || col > 8 || row < 1 || row > 8) {
+            throw new Exception("Invalid board position");
+        }
+
+        return new ChessPosition(row, col);
+    }
+
+    public String leaveGame() {
+        try {
+            webSocket.send(new UserGameCommand(UserGameCommand.CommandType.LEAVE, authToken, currentGameID));
+            webSocket.close();
+        } catch (Exception error) {
+            return error.getMessage();
+        }
+
+        state = State.SIGNEDIN;
+        return "Left game";
+    }
+
+    public String resignGame() {
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Are you sure you want to resign? (yes/no): ");
+
+        String confirm = scanner.nextLine();
+
+        if (!confirm.equalsIgnoreCase("yes")) {
+            return "Resign cancelled";
+        }
+
+        try {
+            webSocket.send(new UserGameCommand(UserGameCommand.CommandType.RESIGN, authToken, currentGameID));
+            webSocket.close();
+        }
+        catch (Exception error) {
+            return error.getMessage();
+        }
+
+        return "You resigned";
+    }
+
+    public String redraw() {
+        drawBoard(currentGame, playerColor);
+        return "";
+    }
+
+    public String inGameHelp() {
+        return """
+        Commands:
+        move <start> <end>
+        leave
+        resign
+        redraw
+        help
+        highlight <tile>
+        """;
+    }
+
+    public String highlight(String... params) {
+        if (params.length != 1) {
+            return "Usage: highlight <position>";
+        }
+
+        try {
+            ChessPosition pos = parsePosition(params[0]);
+
+            Collection<ChessMove> moves = currentGame.validMoves(pos);
+
+            if (moves == null || moves.isEmpty()) {
+                return "No moves available";
+            }
+
+            Collection<ChessPosition> highlights = new ArrayList<>();
+            highlights.add(pos);
+
+            for (ChessMove move : moves) {
+                highlights.add(move.getEndPosition());
+            }
+
+            drawBoardWithHighlights(currentGame, playerColor, highlights);
+
+        } catch (Exception error) {
+            return error.getMessage();
+        }
+
+        return "";
+    }
+
+
 
     //========================= drawBoard functions
 
@@ -384,6 +551,63 @@ public class ChessClient {
         System.out.println();
     }
 
+    private void drawBoardWithHighlights(ChessGame game, ChessGame.TeamColor color, Collection<ChessPosition> highlights) {
+
+        System.out.println();
+
+        boolean isWhite = color == ChessGame.TeamColor.WHITE;
+
+        printColumnLabels(isWhite);
+
+        for (int row = (isWhite ? 8 : 1);
+             isWhite ? row >= 1 : row <= 8;
+             row += (isWhite ? -1 : 1)) {
+
+            printRowWithHighlights(row, isWhite, game, highlights);
+        }
+
+        printColumnLabels(isWhite);
+        System.out.println();
+    }
+
+    private void printRowWithHighlights(int row, boolean isWhite, ChessGame game, Collection<ChessPosition> highlights) {
+
+        System.out.print(" " + row + " ");
+
+        for (int col = (isWhite ? 1 : 8);
+             isWhite ? col <= 8 : col >= 1;
+             col += (isWhite ? 1 : -1)) {
+
+            ChessPosition pos = new ChessPosition(row, col);
+
+            boolean lightSquare = (row + col) % 2 == 0;
+            boolean isHighlight = highlights != null && highlights.contains(pos);
+
+
+            if (isHighlight) {
+                System.out.print(SET_BG_COLOR_GREEN);
+            }
+            else if (lightSquare) {
+                System.out.print(SET_BG_COLOR_LIGHT_GREY);
+            }
+            else {
+                System.out.print(SET_BG_COLOR_MAGENTA);
+            }
+
+            ChessPiece piece = game.getBoard().getPiece(pos);
+
+            if (piece != null) {
+                System.out.print(getPieceSymbol(piece));
+            } else {
+                System.out.print(EMPTY);
+            }
+
+            System.out.print(RESET_BG_COLOR + RESET_TEXT_COLOR);
+        }
+
+        System.out.println(" " + row);
+    }
+
     private String getPieceSymbol(ChessPiece piece) {
         return switch (piece.getPieceType()) {
             case KING -> piece.getTeamColor() == ChessGame.TeamColor.WHITE
@@ -404,6 +628,21 @@ public class ChessClient {
             case PAWN -> piece.getTeamColor() == ChessGame.TeamColor.WHITE
                     ? SET_TEXT_COLOR_WHITE + WHITE_PAWN : SET_TEXT_COLOR_BLACK + BLACK_PAWN;
         };
+    }
+
+    private void serverMessage(ServerMessage msg) {
+        switch (msg.getServerMessageType()) {
+            case LOAD_GAME -> {
+                currentGame = ((LoadGameMessage) msg).getGame();
+                drawBoard(currentGame, playerColor);
+            }
+            case NOTIFICATION -> {
+                System.out.println(((NotificationMessage) msg).getMessage());
+            }
+            case ERROR -> {
+                System.out.println(((ErrorMessage) msg).getErrorMessage());
+            }
+        }
     }
 
 }
