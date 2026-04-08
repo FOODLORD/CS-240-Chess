@@ -15,7 +15,7 @@ public class ChessPiece {
 
     private final ChessGame.TeamColor pieceColor;
     private final PieceType type;
-    private final PieceMovesCalculator calculator;
+    private transient PieceMovesCalculator calculator;
     private boolean hasMoved = false;
 
 
@@ -65,6 +65,10 @@ public class ChessPiece {
      * @return Collection of valid moves
      */
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
+        if (calculator == null) {
+            initializeCalculator();
+        }
+
         return calculator.pieceMoves(board, myPosition);
 
     }
@@ -108,5 +112,9 @@ public class ChessPiece {
     public String toString() {
 
         return String.format("%s %s", pieceColor, type);
+    }
+
+    public void initializeCalculator() {
+        this.calculator = createCalculator(this.type);
     }
 }

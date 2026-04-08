@@ -200,10 +200,17 @@ public class ChessGame {
             enPassantCheck = null;
         }
 
-
-
         castling(piece, move);
-        teamTurn = (teamTurn == TeamColor.WHITE) ? TeamColor.BLACK : TeamColor.WHITE;
+
+        TeamColor nextTurn = (teamTurn == TeamColor.WHITE) ? TeamColor.BLACK : TeamColor.WHITE;
+
+        teamTurn = nextTurn;
+
+        if (isInCheckmate(nextTurn) || isInStalemate(nextTurn)) {
+            gameOver = true;
+        }
+
+
     }
 
     /**

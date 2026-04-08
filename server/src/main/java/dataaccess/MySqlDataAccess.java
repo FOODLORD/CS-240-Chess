@@ -1,5 +1,8 @@
 package dataaccess;
 
+import chess.ChessBoard;
+import chess.ChessPiece;
+import chess.ChessPosition;
 import model.*;
 import chess.ChessGame;
 import com.google.gson.Gson;
@@ -217,15 +220,30 @@ public class MySqlDataAccess implements DataAccess {
 
                 String json = rs.getString("gameState");
 
-                ChessGame game = null;
+                ChessGame game;
 
-                if (json != null) {
-                    try {
-                        game = new Gson().fromJson(json, ChessGame.class);
-                    } catch (Exception error) {
-                        game = new ChessGame();
+                if (json == null || json.isEmpty()) {
+                    game = new ChessGame();
+                }
+                else {
+                    Gson gson = new Gson();
+                    game = gson.fromJson(json, ChessGame.class);
+
+                    if (game.getBoard() == null) {
+                        game.setBoard(new ChessBoard());
+                        game.getBoard().resetBoard();
+                    }
+
+                    for (int row = 1; row <= 8; row++) {
+                        for (int col = 1; col <= 8; col++) {
+                            ChessPiece piece = game.getBoard().getPiece(new ChessPosition(row, col));
+                            if (piece != null) {
+                                piece.initializeCalculator();
+                            }
+                        }
                     }
                 }
+
 
                 return new GameData(
                         rs.getInt("gameID"),

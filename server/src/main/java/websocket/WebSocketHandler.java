@@ -5,6 +5,7 @@ import com.google.gson.Gson;
 import model.GameData;
 import org.eclipse.jetty.websocket.api.Session;
 
+import websocket.commands.MakeMoveCommand;
 import websocket.commands.UserGameCommand;
 import websocket.messages.*;
 
@@ -19,13 +20,14 @@ public class WebSocketHandler {
 
     public void onMessage(Session session, String message) throws Exception {
 
-        var command = new Gson().fromJson(message, UserGameCommand.class);
+        Gson gson = new Gson();
+        UserGameCommand command = gson.fromJson(message, UserGameCommand.class);
 
         switch (command.getCommandType()) {
             case CONNECT -> connect(session, command);
             case MAKE_MOVE -> {
-                var moveCommand = new Gson().fromJson(message, websocket.commands.MakeMoveCommand.class);
-                makeMove(session, command);
+                MakeMoveCommand moveCommand = gson.fromJson(message, MakeMoveCommand.class);
+                makeMove(session, moveCommand);
             }
             case LEAVE -> leave(session, command);
             case RESIGN -> resign(session, command);
@@ -73,7 +75,7 @@ public class WebSocketHandler {
         );
     }
 
-    private void makeMove(Session session, UserGameCommand command) throws Exception {
+    private void makeMove(Session session, MakeMoveCommand command) throws Exception {
 
         var auth = dataAccess.getAuth(command.getAuthToken());
         if (auth == null) {
@@ -91,6 +93,9 @@ public class WebSocketHandler {
 
         var game = gameData.game();
 
+        if (game.getGameOver()) {
+            throw new Exception("Error: game already over");
+        }
 
         ChessGame.TeamColor playerColor;
 
@@ -107,14 +112,18 @@ public class WebSocketHandler {
             throw new Exception("Error: not player turn");
         }
 
+        var move = command.getMove();
 
-        var moveCommand = (websocket.commands.MakeMoveCommand) command;
-        var move = moveCommand.getMove();
-
+        boolean isCheckmate;
+        boolean isStalemate;
 
         try {
             game.makeMove(move);
-        } catch (Exception error) {
+            ChessGame.TeamColor nextTurn = game.getTeamTurn();
+            isCheckmate = game.isInCheckmate(nextTurn);
+            isStalemate = game.isInStalemate(nextTurn);
+        }
+        catch (Exception error) {
             throw new Exception("Error: invalid move");
         }
 
@@ -144,6 +153,22 @@ public class WebSocketHandler {
                 session,
                 new NotificationMessage(message)
         );
+
+        if (isCheckmate) {
+            connectionManager.broadcast(
+                    gameID,
+                    null,
+                    new NotificationMessage("Checkmate! Game over.")
+            );
+        }
+        else if (isStalemate) {
+            connectionManager.broadcast(
+                    gameID,
+                    null,
+                    new NotificationMessage("Stalemate! Game over.")
+            );
+        }
+
 
     }
 
@@ -252,11 +277,5 @@ public class WebSocketHandler {
                 new NotificationMessage(message)
         );
 
-
-        connectionManager.broadcast(
-                gameID,
-                null,
-                new LoadGameMessage(game)
-        );
     }
 }
