@@ -15,6 +15,7 @@ public class ChessGame {
     private ChessBoard board;
     private TeamColor teamTurn;
     private ChessPosition enPassantCheck;
+    private boolean gameOver = false;
 
     public ChessGame() {
 
@@ -151,6 +152,10 @@ public class ChessGame {
      * @throws InvalidMoveException if move is invalid
      */
     public void makeMove(ChessMove move) throws InvalidMoveException {
+
+        if (getGameOver()) {
+            throw new InvalidMoveException();
+        }
 
         ChessPiece piece = board.getPiece(move.getStartPosition());
 
@@ -422,5 +427,13 @@ public class ChessGame {
     @Override
     public String toString() {
         return String.format("%s,%s", getTeamTurn(),getBoard());
+    }
+
+    public boolean getGameOver() {
+        return gameOver;
+    }
+
+    public void setGameOver(boolean gameOver) {
+        this.gameOver = gameOver;
     }
 }

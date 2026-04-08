@@ -200,5 +200,63 @@ public class WebSocketHandler {
         );
     }
 
-    private void resign(Session session, UserGameCommand command) throws Exception {}
+    private void resign(Session session, UserGameCommand command) throws Exception {
+        var auth = dataAccess.getAuth(command.getAuthToken());
+        if (auth == null) {
+            throw new Exception("Error: unauthorized");
+        }
+
+        String username = auth.username();
+        int gameID = command.getGameID();
+
+        var gameData = dataAccess.getGame(gameID);
+        if (gameData == null || gameData.game() == null) {
+            throw new Exception("Error: bad request");
+        }
+
+        var game = gameData.game();
+
+
+        boolean isWhite = username.equals(gameData.whiteUsername());
+        boolean isBlack = username.equals(gameData.blackUsername());
+
+        if (!isWhite && !isBlack) {
+            throw new Exception("Error: observers cannot resign");
+        }
+
+
+        if (game.getGameOver()) {
+            throw new Exception("Error: game already over");
+        }
+
+
+        game.setGameOver(true);
+
+
+        GameData updatedGame = new GameData(
+                gameID,
+                gameData.whiteUsername(),
+                gameData.blackUsername(),
+                gameData.gameName(),
+                game
+        );
+
+        dataAccess.updateGame(updatedGame);
+
+
+        String message = username + " resigned. Game over.";
+
+        connectionManager.broadcast(
+                gameID,
+                null,
+                new NotificationMessage(message)
+        );
+
+
+        connectionManager.broadcast(
+                gameID,
+                null,
+                new LoadGameMessage(game)
+        );
+    }
 }
