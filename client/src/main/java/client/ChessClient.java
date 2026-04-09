@@ -96,6 +96,9 @@ public class ChessClient {
             }
 
             else if (state == State.INGAME) {
+                if (webSocket == null) {
+                    return "Not connected to a game";
+                }
                 return switch (cmd) {
                     case "move" -> makeMove(params);
                     case "leave" -> leaveGame();
@@ -654,12 +657,13 @@ public class ChessClient {
                 String message = ((NotificationMessage) msg).getMessage();
                 System.out.println(message);
 
-                if (message.toLowerCase().contains("resigned. game over")) {
+                if (message.toLowerCase().contains("game over")) {
                     state = State.SIGNEDIN;
 
                     try {
                         webSocket.close();
-                    } catch (Exception ignored) {}
+                    }
+                    catch (Exception ignored) {}
 
                 }
             }

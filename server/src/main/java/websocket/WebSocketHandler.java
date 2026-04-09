@@ -2,7 +2,7 @@ package websocket;
 import chess.ChessGame;
 import dataaccess.DataAccess;
 import com.google.gson.Gson;
-import jakarta.websocket.OnClose;
+
 import model.GameData;
 import org.eclipse.jetty.websocket.api.Session;
 
@@ -81,11 +81,11 @@ public class WebSocketHandler {
         String message;
 
         if (username.equals(gameData.whiteUsername())) {
-            message = "\n " + username + " joined as WHITE";
+            message = "\n" + username + " joined as WHITE";
         } else if (username.equals(gameData.blackUsername())) {
-            message = "\n " + username + " joined as BLACK";
+            message = "\n" + username + " joined as BLACK";
         } else {
-            message = "\n " + username + " joined as an observer";
+            message = "\n" + username + " joined as an observer";
         }
 
         connectionManager.broadcast(
@@ -188,23 +188,28 @@ public class WebSocketHandler {
 
         connectionManager.broadcast(
                 gameID,
-                null,
+                session,
                 new NotificationMessage(message)
         );
 
         if (isCheckmate) {
-            connectionManager.broadcast(
-                    gameID,
-                    null,
-                    new NotificationMessage("Checkmate! Game over.")
-            );
+            try {
+                connectionManager.broadcast(
+                        gameID,
+                        null,
+                        new NotificationMessage("Checkmate! Game over.")
+                );
+            }
+            catch (Exception ignored) {}
         }
         else if (isStalemate) {
-            connectionManager.broadcast(
-                    gameID,
-                    null,
-                    new NotificationMessage("Stalemate! Game over.")
-            );
+            try {
+                connectionManager.broadcast(
+                        gameID,
+                        null,
+                        new NotificationMessage("Stalemate! Game over.")
+                );
+            } catch (Exception ignored) {}
         }
 
 
@@ -303,17 +308,6 @@ public class WebSocketHandler {
         );
 
         dataAccess.updateGame(updatedGame);
-
-        try {
-            connectionManager.broadcast(
-                    gameID,
-                    null,
-                    new LoadGameMessage(game)
-            );
-        }
-        catch (Exception ignored) {
-
-        }
 
 
         String message = username + " resigned. Game over.";
