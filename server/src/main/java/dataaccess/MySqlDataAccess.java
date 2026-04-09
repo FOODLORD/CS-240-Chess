@@ -6,7 +6,6 @@ import chess.ChessPosition;
 import model.*;
 import chess.ChessGame;
 import com.google.gson.Gson;
-import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.*;
 import java.util.*;
@@ -216,47 +215,22 @@ public class MySqlDataAccess implements DataAccess {
 
             var rs = statement.executeQuery();
 
-            if (rs.next()) {
-
-                String json = rs.getString("gameState");
-
-                ChessGame game;
-
-                if (json == null || json.isEmpty()) {
-                    game = new ChessGame();
-                }
-                else {
-                    Gson gson = new Gson();
-                    game = gson.fromJson(json, ChessGame.class);
-
-                    if (game.getBoard() == null) {
-                        game.setBoard(new ChessBoard());
-                        game.getBoard().resetBoard();
-                    }
-
-                    for (int row = 1; row <= 8; row++) {
-                        for (int col = 1; col <= 8; col++) {
-                            ChessPiece piece = game.getBoard().getPiece(new ChessPosition(row, col));
-                            if (piece != null) {
-                                piece.initializeCalculator();
-                            }
-                        }
-                    }
-                }
-
-
-                return new GameData(
-                        rs.getInt("gameID"),
-                        rs.getString("whiteUsername"),
-                        rs.getString("blackUsername"),
-                        rs.getString("gameName"),
-                        game
-                );
+            if (!rs.next()) {
+                return null;
             }
 
-            return null;
+            ChessGame game = readGame(rs.getString("gameState"));
 
-        } catch (SQLException error) {
+            return new GameData(
+                    rs.getInt("gameID"),
+                    rs.getString("whiteUsername"),
+                    rs.getString("blackUsername"),
+                    rs.getString("gameName"),
+                    game
+            );
+
+        }
+        catch (SQLException error) {
             throw new DataAccessException("Error: cannot retrieve game", error);
         }
     }
@@ -339,6 +313,39 @@ public class MySqlDataAccess implements DataAccess {
 
         } catch (SQLException error) {
             throw new DataAccessException("Error: cannot clear database", error);
+        }
+    }
+
+    private ChessGame readGame(String json) {
+        ChessGame game;
+
+        if (json == null || json.isEmpty()) {
+            game = new ChessGame();
+        } else {
+            game = new Gson().fromJson(json, ChessGame.class);
+        }
+
+        resetBoard(game);
+        initializePieces(game);
+        return game;
+    }
+
+    private void resetBoard(ChessGame game) {
+        if (game.getBoard() == null) {
+            game.setBoard(new ChessBoard());
+            game.getBoard().resetBoard();
+        }
+    }
+
+    private void initializePieces(ChessGame game) {
+        for (int row = 1; row <= 8; row++) {
+            for (int col = 1; col <= 8; col++) {
+                ChessPiece piece = game.getBoard().getPiece(new ChessPosition(row, col));
+                if (piece == null) {
+                    continue;
+                }
+                piece.initializeCalculator();
+            }
         }
     }
 }

@@ -103,29 +103,21 @@ public class WebSocketHandler {
     }
 
     private void makeMove(Session session, MakeMoveCommand command) throws Exception {
-
         var auth = dataAccess.getAuth(command.getAuthToken());
         if (auth == null) {
             throw new Exception("Error: unauthorized");
         }
         String username = auth.username();
-
         int gameID = command.getGameID();
-
-
         var gameData = dataAccess.getGame(gameID);
         if (gameData == null || gameData.game() == null) {
             throw new Exception("Error: bad request");
         }
-
         var game = gameData.game();
-
         if (game.getGameOver()) {
             throw new Exception("Error: game already over");
         }
-
         ChessGame.TeamColor playerColor;
-
         if (username.equals(gameData.whiteUsername())) {
             playerColor = ChessGame.TeamColor.WHITE;
         } else if (username.equals(gameData.blackUsername())) {
@@ -133,21 +125,15 @@ public class WebSocketHandler {
         } else {
             throw new Exception("Error: observer cannot make moves");
         }
-
-
         if (game.getTeamTurn() != playerColor) {
             throw new Exception("Error: not player turn");
         }
-
         var move = command.getMove();
-
         if (move == null) {
             throw new Exception("Error: invalid move");
         }
-
         boolean isCheckmate;
         boolean isStalemate;
-
         try {
             game.makeMove(move);
             ChessGame.TeamColor nextTurn = game.getTeamTurn();
@@ -164,8 +150,6 @@ public class WebSocketHandler {
             }
             return;
         }
-
-
         GameData updatedGame = new GameData(
                 gameID,
                 gameData.whiteUsername(),
@@ -173,25 +157,18 @@ public class WebSocketHandler {
                 gameData.gameName(),
                 game
         );
-
         dataAccess.updateGame(updatedGame);
-
-
         connectionManager.broadcast(
                 gameID,
                 null,
                 new LoadGameMessage(game)
         );
-
-
         String message = username + " moved from " + move.getStartPosition() + " to " + move.getEndPosition();
-
         connectionManager.broadcast(
                 gameID,
                 session,
                 new NotificationMessage(message)
         );
-
         if (isCheckmate) {
             try {
                 connectionManager.broadcast(
@@ -211,8 +188,6 @@ public class WebSocketHandler {
                 );
             } catch (Exception ignored) {}
         }
-
-
     }
 
     private void leave(Session session, UserGameCommand command) throws Exception {
