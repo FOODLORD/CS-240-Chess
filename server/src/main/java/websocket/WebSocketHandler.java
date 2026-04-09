@@ -45,14 +45,14 @@ public class WebSocketHandler {
         catch (Exception e) {
             System.out.println("WebSocket error: " + e.getMessage());
 
-            if (session != null && session.isOpen()) {
-                try {
+            try {
+                if (session != null && session.isOpen()) {
                     ErrorMessage error = new ErrorMessage("Error: " + e.getMessage());
                     session.getRemote().sendString(gson.toJson(error));
                 }
-                catch (Exception ignored) {
+            }
+            catch (Exception ignored) {
 
-                }
             }
         }
     }
@@ -94,7 +94,12 @@ public class WebSocketHandler {
                 new NotificationMessage(message)
         );
 
-        session.getRemote().sendString(new Gson().toJson(new LoadGameMessage(game)));
+        try {
+            session.getRemote().sendString(new Gson().toJson(new LoadGameMessage(game)));
+        }
+        catch (Exception error) {
+            System.out.println("Error sending game to client: " + error.getMessage());
+        }
     }
 
     private void makeMove(Session session, MakeMoveCommand command) throws Exception {
@@ -150,7 +155,14 @@ public class WebSocketHandler {
             isStalemate = game.isInStalemate(nextTurn);
         }
         catch (Exception error) {
-            throw new Exception("Error: invalid move");
+            try {
+                session.getRemote().sendString(
+                        new Gson().toJson(new ErrorMessage("Error: invalid move"))
+                );
+            }
+            catch (Exception ignored) {
+            }
+            return;
         }
 
 
@@ -292,27 +304,29 @@ public class WebSocketHandler {
 
         dataAccess.updateGame(updatedGame);
 
-        connectionManager.broadcast(
-                gameID,
-                null,
-                new LoadGameMessage(game)
-        );
+        try {
+            connectionManager.broadcast(
+                    gameID,
+                    null,
+                    new LoadGameMessage(game)
+            );
+        }
+        catch (Exception ignored) {
+
+        }
 
 
         String message = username + " resigned. Game over.";
 
-        connectionManager.broadcast(
-                gameID,
-                null,
-                new NotificationMessage(message)
-        );
+        try {
+            connectionManager.broadcast(
+                    gameID,
+                    null,
+                    new NotificationMessage(message)
+            );
+        } catch (Exception ignored) {}
 
     }
 
-    @OnClose
-    public void onClose(Session session) {
-        for (Integer gameID : connectionManager.getGameIDs()) {
-            connectionManager.remove(gameID, session);
-        }
-    }
+
 }

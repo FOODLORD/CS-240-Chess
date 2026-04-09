@@ -103,7 +103,7 @@ public class ChessClient {
                     case "redraw" -> redraw();
                     case "help" -> inGameHelp();
                     case "highlight" -> highlight(params);
-                    default -> inGameHelp();
+                    default -> "Invalid command. Type help.";
                 };
             }
 
@@ -373,7 +373,7 @@ public class ChessClient {
             webSocket.send(new MakeMoveCommand(authToken, currentGameID, move));
 
         } catch (Exception error) {
-            return error.getMessage();
+            return "Invalid move";
         }
 
         return "";
@@ -401,6 +401,7 @@ public class ChessClient {
         try {
             webSocket.send(new UserGameCommand(UserGameCommand.CommandType.LEAVE, authToken, currentGameID));
             webSocket.close();
+            webSocket = null;
         } catch (Exception error) {
             return error.getMessage();
         }
@@ -654,11 +655,12 @@ public class ChessClient {
                 System.out.println(message);
 
                 if (message.toLowerCase().contains("resigned. game over")) {
+                    state = State.SIGNEDIN;
+
                     try {
                         webSocket.close();
                     } catch (Exception ignored) {}
 
-                    state = State.SIGNEDIN;
                 }
             }
             case ERROR -> {
