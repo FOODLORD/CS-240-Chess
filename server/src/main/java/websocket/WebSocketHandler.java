@@ -38,15 +38,21 @@ public class WebSocketHandler {
                     makeMove(session, moveCommand);
                 }
                 case LEAVE -> leave(session, command);
-                case RESIGN -> resign(session, command);
+                case RESIGN -> resign(command);
             }
         }
         catch (Exception e) {
-            try {
-                ErrorMessage error = new ErrorMessage("Error: " + e.getMessage());
-                session.getRemote().sendString(gson.toJson(error));
-            } catch (Exception ignored) {}
+            System.out.println("WebSocket error: " + e.getMessage());
 
+            if (session != null && session.isOpen()) {
+                try {
+                    ErrorMessage error = new ErrorMessage("Error: " + e.getMessage());
+                    session.getRemote().sendString(gson.toJson(error));
+                }
+                catch (Exception ignored) {
+
+                }
+            }
         }
     }
 
@@ -56,11 +62,8 @@ public class WebSocketHandler {
         if (auth == null) {
             throw new Exception("Error: unauthorized");
         }
+
         String username = auth.username();
-
-
-        connectionManager.add(command.getGameID(), new Connection(username, session));
-
 
         var gameData = dataAccess.getGame(command.getGameID());
         if (gameData == null) {
@@ -71,6 +74,8 @@ public class WebSocketHandler {
         if (game == null) {
             game = new ChessGame();
         }
+
+        connectionManager.add(command.getGameID(), new Connection(username, session));
 
         session.getRemote().sendString(new Gson().toJson(new LoadGameMessage(game)));
 
@@ -201,9 +206,6 @@ public class WebSocketHandler {
         String username = auth.username();
         int gameID = command.getGameID();
 
-
-        connectionManager.remove(gameID, session);
-
         var gameData = dataAccess.getGame(gameID);
         if (gameData == null) {
             throw new Exception("Error: bad request");
@@ -243,9 +245,12 @@ public class WebSocketHandler {
                 session,
                 new NotificationMessage(username + " left the game")
         );
+
+        connectionManager.remove(gameID, session);
+
     }
 
-    private void resign(Session session, UserGameCommand command) throws Exception {
+    private void resign(UserGameCommand command) throws Exception {
         var auth = dataAccess.getAuth(command.getAuthToken());
         if (auth == null) {
             throw new Exception("Error: unauthorized");
@@ -274,9 +279,7 @@ public class WebSocketHandler {
             throw new Exception("Error: game already over");
         }
 
-
         game.setGameOver(true);
-
 
         GameData updatedGame = new GameData(
                 gameID,
@@ -287,6 +290,12 @@ public class WebSocketHandler {
         );
 
         dataAccess.updateGame(updatedGame);
+
+        connectionManager.broadcast(
+                gameID,
+                null,
+                new LoadGameMessage(game)
+        );
 
 
         String message = username + " resigned. Game over.";

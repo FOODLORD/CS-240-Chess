@@ -420,6 +420,7 @@ public class ChessClient {
         try {
             webSocket.send(new UserGameCommand(UserGameCommand.CommandType.RESIGN, authToken, currentGameID));
             webSocket.close();
+            state = State.SIGNEDIN;
         }
         catch (Exception error) {
             return error.getMessage();
@@ -453,11 +454,19 @@ public class ChessClient {
         try {
             ChessPosition pos = parsePosition(params[0]);
 
-            Collection<ChessMove> moves = currentGame.validMoves(pos);
+            ChessPiece piece = currentGame.getBoard().getPiece(pos);
+            if (piece == null) {
+                return "No piece at that position";
+            }
 
-            if (moves == null || moves.isEmpty()) {
+            Collection<ChessMove> moves;
+
+            try {
+                moves = currentGame.validMoves(pos);
+            } catch (Exception error) {
                 return "No moves available";
             }
+
 
             Collection<ChessPosition> highlights = new ArrayList<>();
             highlights.add(pos);
@@ -469,7 +478,7 @@ public class ChessClient {
             drawBoardWithHighlights(currentGame, playerColor, highlights);
 
         } catch (Exception error) {
-            return error.getMessage();
+            return "Invalid highlight";
         }
 
         return "";
@@ -633,8 +642,12 @@ public class ChessClient {
     private void serverMessage(ServerMessage msg) {
         switch (msg.getServerMessageType()) {
             case LOAD_GAME -> {
-                currentGame = ((LoadGameMessage) msg).getGame();
-                drawBoard(currentGame, playerColor);
+                ChessGame newGame = ((LoadGameMessage) msg).getGame();
+
+                if (newGame != null) {
+                    currentGame = newGame;
+                    drawBoard(currentGame, playerColor);
+                }
             }
             case NOTIFICATION -> {
                 System.out.println(((NotificationMessage) msg).getMessage());

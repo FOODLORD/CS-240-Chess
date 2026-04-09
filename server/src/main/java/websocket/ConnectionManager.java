@@ -3,6 +3,7 @@ package websocket;
 import com.google.gson.Gson;
 import org.eclipse.jetty.websocket.api.Session;
 
+import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -24,25 +25,31 @@ public class ConnectionManager {
     }
 
     public Set<Connection> get(Integer gameID) {
-        return connections.getOrDefault(gameID, ConcurrentHashMap.newKeySet());
+        return connections.computeIfAbsent(gameID, k -> ConcurrentHashMap.newKeySet());
     }
 
-    public void broadcast(Integer gameID, Session exclude, Object message) throws Exception {
+    public void broadcast(Integer gameID, Session exclude, Object message) {
         String json = new Gson().toJson(message);
 
-        for (Connection c : get(gameID)) {
-            if (c.session.isOpen() && c.session != exclude) {
-                c.session.getRemote().sendString(json);
+        Set<Connection> connections = get(gameID);
+
+        Iterator<Connection> iterator = connections.iterator();
+
+        while (iterator.hasNext()) {
+            Connection c = iterator.next();
+
+            if (c.session == null || !c.session.isOpen()) {
+                iterator.remove();
+                continue;
             }
-        }
-    }
 
-    public void broadcastAll(Integer gameID, Object message) throws Exception {
-        String json = new Gson().toJson(message);
-
-        for (Connection c : get(gameID)) {
-            if (c.session.isOpen()) {
-                c.session.getRemote().sendString(json);
+            if (c.session != exclude) {
+                try {
+                    c.session.getRemote().sendString(json);
+                }
+                catch (Exception e) {
+                    iterator.remove();
+                }
             }
         }
     }
