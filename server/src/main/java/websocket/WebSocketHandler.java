@@ -2,6 +2,7 @@ package websocket;
 import chess.ChessGame;
 import dataaccess.DataAccess;
 import com.google.gson.Gson;
+import jakarta.websocket.OnClose;
 import model.GameData;
 import org.eclipse.jetty.websocket.api.Session;
 
@@ -77,16 +78,14 @@ public class WebSocketHandler {
 
         connectionManager.add(command.getGameID(), new Connection(username, session));
 
-        session.getRemote().sendString(new Gson().toJson(new LoadGameMessage(game)));
-
         String message;
 
         if (username.equals(gameData.whiteUsername())) {
-            message = username + " joined as WHITE";
+            message = "\n " + username + " joined as WHITE";
         } else if (username.equals(gameData.blackUsername())) {
-            message = username + " joined as BLACK";
+            message = "\n " + username + " joined as BLACK";
         } else {
-            message = username + " joined as an observer";
+            message = "\n " + username + " joined as an observer";
         }
 
         connectionManager.broadcast(
@@ -94,6 +93,8 @@ public class WebSocketHandler {
                 session,
                 new NotificationMessage(message)
         );
+
+        session.getRemote().sendString(new Gson().toJson(new LoadGameMessage(game)));
     }
 
     private void makeMove(Session session, MakeMoveCommand command) throws Exception {
@@ -175,7 +176,7 @@ public class WebSocketHandler {
 
         connectionManager.broadcast(
                 gameID,
-                session,
+                null,
                 new NotificationMessage(message)
         );
 
@@ -306,5 +307,12 @@ public class WebSocketHandler {
                 new NotificationMessage(message)
         );
 
+    }
+
+    @OnClose
+    public void onClose(Session session) {
+        for (Integer gameID : connectionManager.getGameIDs()) {
+            connectionManager.remove(gameID, session);
+        }
     }
 }

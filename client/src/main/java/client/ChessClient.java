@@ -45,7 +45,9 @@ public class ChessClient {
 
             try {
                 result = eval(line);
-                System.out.println(result + RESET_TEXT_COLOR);
+                if (!result.isEmpty()) {
+                    System.out.println(result + RESET_TEXT_COLOR);
+                }
             }
 
             catch (ResponseException error){
@@ -419,14 +421,12 @@ public class ChessClient {
 
         try {
             webSocket.send(new UserGameCommand(UserGameCommand.CommandType.RESIGN, authToken, currentGameID));
-            webSocket.close();
-            state = State.SIGNEDIN;
         }
         catch (Exception error) {
             return error.getMessage();
         }
 
-        return "You resigned";
+        return "";
     }
 
     public String redraw() {
@@ -650,7 +650,16 @@ public class ChessClient {
                 }
             }
             case NOTIFICATION -> {
-                System.out.println(((NotificationMessage) msg).getMessage());
+                String message = ((NotificationMessage) msg).getMessage();
+                System.out.println(message);
+
+                if (message.toLowerCase().contains("resigned. game over")) {
+                    try {
+                        webSocket.close();
+                    } catch (Exception ignored) {}
+
+                    state = State.SIGNEDIN;
+                }
             }
             case ERROR -> {
                 System.out.println(((ErrorMessage) msg).getErrorMessage());

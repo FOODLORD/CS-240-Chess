@@ -11,6 +11,10 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ConnectionManager {
     private final ConcurrentHashMap<Integer, Set<Connection>> connections = new ConcurrentHashMap<>();
 
+    public Set<Integer> getGameIDs() {
+        return connections.keySet();
+    }
+
     public void add(Integer gameID, Connection connection) {
         Set<Connection> set = connections.computeIfAbsent(gameID, k -> ConcurrentHashMap.newKeySet());
 
